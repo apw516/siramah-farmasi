@@ -28,4 +28,8 @@ Route::post('riwayat_obat_hari_ini', [PelayananController::class, 'riwayat_obat_
 Route::post('hitunganracikan', [PelayananController::class, 'hitunganracikan'])->name('hitunganracikan');
 Route::post('post_komponen_racik', [PelayananController::class, 'post_komponen_racik'])->name('post_komponen_racik');
 Route::post('jumlah_grand_total_komponen_racikan', [PelayananController::class, 'jumlah_grand_total_komponen_racikan'])->name('jumlah_grand_total_komponen_racikan');
+Route::post('detail_obat_racik', [PelayananController::class, 'detail_obat_racik'])->name('detail_obat_racik');
+Route::post('edit_aturan_pakai', [PelayananController::class, 'edit_aturan_pakai'])->name('edit_aturan_pakai');
+Route::post('simpanedit_aturanpakai', [PelayananController::class, 'simpanedit_aturanpakai'])->name('simpanedit_aturanpakai');
+Route::post('retur_obat', [PelayananController::class, 'retur_obat'])->name('retur_obat');
 Route::get('cetaketiket/{id}', [PelayananController::class, 'cetaknotafarmasi_2']); //formpasien_bpjs

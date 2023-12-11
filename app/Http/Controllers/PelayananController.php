@@ -8,6 +8,8 @@ use App\Models\ti_kartu_stok;
 use App\Models\ts_layanan_detail_dummy;
 use App\Models\ts_layanan_header_dummy;
 use App\Models\xxxmt_racikan_header;
+use App\Models\ts_retur_header_dummy;
+use App\Models\ts_retur_detail_dummy;
 use App\Models\xxxmt_racikan_detail;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -634,10 +636,10 @@ class PelayananController extends Controller
                         $mt_racikan_header = mt_racikan_header_dummy::create($header_racikan);
                         foreach ($detail_racikan as $dr) {
                             $cek_stok = db::select('SELECT * FROM ti_kartu_stok WHERE NO = ( SELECT MAX(a.no ) AS nomor FROM ti_kartu_stok a WHERE kode_barang = ? AND kode_unit = ? )', ([$dr->kode_barang, '4008']));
-                            if($detail_racikan[0]->tipe_racik == 'NS'){
+                            if ($detail_racikan[0]->tipe_racik == 'NS') {
                                 $stok_current = $cek_stok[0]->stok_current - $dr->qty_barang;
                                 $stok_out =  $dr->qty_barang;
-                            }else{
+                            } else {
                                 $stok_current = $cek_stok[0]->stok_current - 1;
                                 $stok_out =  1;
                             }
@@ -660,7 +662,7 @@ class PelayananController extends Controller
                                 'kode_unit' => '4008',
                                 'kode_barang' => $dr->kode_barang,
                                 'stok_last' => $cek_stok[0]->stok_current,
-                                'stok_out' =>$stok_out,
+                                'stok_out' => $stok_out,
                                 'stok_current' => $stok_current,
                                 'harga_beli' => $mt_barang[0]->hna,
                                 'act' => '1',
@@ -1448,9 +1450,10 @@ class PelayananController extends Controller
     {
         $kodekunjungan = $request->kode;
         $header = DB::connection('mysql2')->select('select * from ts_layanan_header where kode_kunjungan = ? AND status_layanan < ?', [$kodekunjungan, 3]);
-        $detail = DB::connection('mysql2')->select('SELECT b.id,row_id_header,kode_barang,fc_nama_barang(kode_barang) AS nama_barang,aturan_pakai,jumlah_layanan,jumlah_retur,grantotal_layanan,a.`total_layanan`,c.nama_anestesi FROM ts_layanan_header a
+        $detail = DB::connection('mysql2')->select('SELECT b.id,row_id_header,kode_barang,fc_nama_barang(kode_barang) AS nama_barang,aturan_pakai,jumlah_layanan,jumlah_retur,grantotal_layanan,a.`total_layanan`,c.nama_anestesi,d.tipe_racik,b.status_layanan_detail FROM ts_layanan_header a
         LEFT OUTER JOIN ts_layanan_detail b ON a.`id` = b.`row_id_header`
         LEFT OUTER JOIN mt_anestesi_tipe c on b.tipe_anestesi = c.id
+        LEFT OUTER JOIN mt_racikan d on b.kode_barang = d.kode_racik
         WHERE a.`kode_kunjungan` = ? AND b.`kode_barang` IS NOT NULL AND a.status_layanan < ?', [$kodekunjungan, 3]);
         return view('Layanan.tabel_riwayat_obat_hari_ini', compact([
             'header',
@@ -1518,6 +1521,42 @@ class PelayananController extends Controller
         }
         date_default_timezone_set('Asia/Jakarta');
         return 'DET' . date('ymd') . $kd;
+    }
+    public function get_kode_retur_header()
+    {
+        $q = DB::connection('mysql2')->select('SELECT id,kode_retur_header,RIGHT(kode_retur_header,6) AS kd_max  FROM ts_retur_header
+        WHERE DATE(tgl_retur) = CURDATE()
+        ORDER BY id DESC
+        LIMIT 1');
+        $kd = "";
+        if (count($q) > 0) {
+            foreach ($q as $k) {
+                $tmp = ((int) $k->kd_max) + 1;
+                $kd = sprintf("%06s", $tmp);
+            }
+        } else {
+            $kd = "000001";
+        }
+        date_default_timezone_set('Asia/Jakarta');
+        return 'RET'.'DP2' . date('ymd') . $kd;
+    }
+    public function get_kode_retur_detail()
+    {
+        $q = DB::connection('mysql2')->select('SELECT id,kode_retur_detail,RIGHT(kode_retur_detail,6) AS kd_max  FROM ts_retur_detail
+        WHERE DATE(tgl_retur_detail) = CURDATE()
+        ORDER BY id DESC
+        LIMIT 1');
+        $kd = "";
+        if (count($q) > 0) {
+            foreach ($q as $k) {
+                $tmp = ((int) $k->kd_max) + 1;
+                $kd = sprintf("%06s", $tmp);
+            }
+        } else {
+            $kd = "000001";
+        }
+        date_default_timezone_set('Asia/Jakarta');
+        return 'RETDET'. date('ymd') . $kd;
     }
     public function get_kode_racik()
     {
@@ -1742,9 +1781,10 @@ class PelayananController extends Controller
             'jasa_racik'
         ]));
     }
-    public function cetaknotafarmasi_2($id){
-        $DH = DB::select('select * from ts_layanan_header where id = ?',[$id]);
-        $DK = DB::select('select * from ts_kunjungan where kode_kunjungan = ?',[$DH[0]->kode_kunjungan]);
+    public function cetaknotafarmasi_2($id)
+    {
+        $DH = DB::select('select * from ts_layanan_header where id = ?', [$id]);
+        $DK = DB::select('select * from ts_kunjungan where kode_kunjungan = ?', [$DH[0]->kode_kunjungan]);
         $KODE_HEADER = $DH[0]->kode_layanan_header;
         $ID_HEADER = $DK[0]->counter;
         $PDO = DB::connection()->getPdo();
@@ -1757,6 +1797,194 @@ class PelayananController extends Controller
         $report->load_xml_file($filename)
             ->setDataSource($config)
             ->export('Pdf');
+    }
+    public function detail_obat_racik(Request $request)
+    {
+        $detail = DB::connection('mysql2')->select('SELECT c.`kode_barang`,d.`nama_barang`,qty_racik AS qty,kemasan FROM ts_layanan_detail a
+        LEFT OUTER JOIN mt_racikan b ON a.`kode_barang` = b.`kode_racik`
+        LEFT OUTER JOIN mt_racikan_detail c ON b.`kode_racik` = c.`kode_racik`
+        LEFT OUTER JOIN mt_barang d ON c.`kode_barang` = d.`kode_barang`
+        WHERE a.id = ? AND c.`satuan_barang` <> ?', [$request->id, '-']);
+        return view('Layanan.detail_racikan', compact([
+            'detail'
+        ]));
+    }
+    public function edit_aturan_pakai(Request $request)
+    {
+        $id = $request->id;
+        $aturanpakai = $request->aturanpakai;
+        $namabarang = $request->namabarang;
+        return view('Layanan.edit_aturan_pakai', compact([
+            'id',
+            'aturanpakai',
+            'namabarang'
+        ]));
+    }
+    public function simpanedit_aturanpakai(Request $request)
+    {
+        $id = $request->iddetail;
+        $aturan = $request->aturanpakai;
+        ts_layanan_detail_dummy::where('id', $id)
+            ->update(['aturan_pakai' => $aturan]);
+        $data = [
+            'kode' => 200,
+            'message' => 'Sukses',
+        ];
+        echo json_encode($data);
+    }
+    public function retur_obat(Request $request)
+    {
+        $id_detail = $request->id;
+        $detail = DB::connection('mysql2')->select('select * from ts_layanan_detail where id = ?', [$id_detail]);
+        if ($detail[0]->status_layanan_detail == 'CLS') {
+            $data = [
+                'kode' => 500,
+                'message' => 'Layanan / Obat sudah diretur !',
+            ];
+            echo json_encode($data);
+            die;
+        }
+        $id_header = $detail[0]->row_id_header;
+        $header = DB::connection('mysql2')->select('select * from ts_layanan_header where id = ?', [$id_header]);
+        $kode_kunjungan = $header[0]->kode_kunjungan;
+        $update_layanan_detail_1 = [
+            'status_layanan_detail' => 'CLS',
+            'jumlah_retur' => $detail[0]->jumlah_layanan,
+            'tagihan_penjamin' => 0,
+            'tagihan_pribadi' => 0,
+        ];
+        ts_layanan_detail_dummy::where('id', $id_detail)
+            ->update($update_layanan_detail_1);
+        $update_layanan_detail_2 = [
+            'status_layanan_detail' => 'CLS',
+            'jumlah_retur' => 1,
+            'tagihan_penjamin' => 0,
+            'tagihan_pribadi' => 0,
+        ];
+        ts_layanan_detail_dummy::where('row_id_header', $id_header)->where('kode_tarif_detail', 'TX23513')
+            ->update($update_layanan_detail_2);
+
+
+
+        if ($header[0]->kode_tipe_transaksi == 1) {
+            $total_header = $header[0]->tagihan_pribadi - $detail[0]->grantotal_layanan;
+        } else {
+            $total_header = $header[0]->tagihan_penjamin - $detail[0]->grantotal_layanan;
+        }
+
+        $cek_detail = DB::connection('mysql2')->select('SELECT * from ts_layanan_detail where row_id_header = ? AND status_layanan_detail = ?', [$id_header, 'OPN']);
+        $status_layanan_header = 2;
+        $status_retur = 'OPN';
+        if ($header[0]->kode_tipe_transaksi == 1) {
+            $tagihan_penjamin = 0;
+            $tagihan_pribadi = $total_header;
+        } else {
+            $tagihan_pribadi = 0;
+            $tagihan_penjamin = $total_header;
+        }
+
+        $total_retur = $detail[0]->grantotal_layanan;
+        if (count($cek_detail) <= 1) {
+            $total_retur = $detail[0]->grantotal_layanan + 1000;
+            $update_layanan_detail_3 = [
+                'status_layanan_detail' => 'CLS',
+                'jumlah_retur' => 1,
+                'tagihan_penjamin' => 0,
+                'tagihan_pribadi' => 0,
+            ];
+            ts_layanan_detail_dummy::where('row_id_header', $id_header)->where('kode_tarif_detail', 'TX23523')
+                ->update($update_layanan_detail_3);
+            $total_header =  $total_header - 1000;
+            $status_layanan_header = 3;
+            $status_retur = 'CCL';
+            if ($header[0]->kode_tipe_transaksi == 1) {
+                $tagihan_penjamin = 0;
+                $tagihan_pribadi = $total_header;
+            } else {
+                $tagihan_pribadi = 0;
+                $tagihan_penjamin = $total_header;
+            }
+        }
+        $kode_retur_header = $this->get_kode_retur_header();
+        $ts_retur_header = [
+            'kode_kunjungan' => $kode_kunjungan,
+            'kode_retur_header' => $kode_retur_header,
+            'kode_layanan_header' => $header[0]->kode_layanan_header,
+            'tgl_retur' => $this->get_now(),
+            'total_retur' => $total_retur,
+            'alasan_retur' => 'RETUR',
+            'status_retur' => 'CLS',
+            'pic' => '1',
+            'status_pembayaran' => 'CLS',
+        ];
+        $rh = ts_retur_header_dummy::create($ts_retur_header);
+        $row_id_h_ret = $rh->id;
+        $tgl_Ret = $this->get_now();
+        $ts_retur_detail_1 = [
+            'kode_retur_detail' => $this->get_kode_retur_detail(),
+            'tgl_retur_detail' => $tgl_Ret,
+            'kode_retur_header' => $kode_retur_header,
+            'id_layanan_detail' => '',
+            'qty_awal' =>  $detail[0]->jumlah_layanan,
+            'qty_retur' =>  $detail[0]->jumlah_layanan,
+            'qty_sisa' => 0,
+            'tarif_layanan' =>  $detail[0]->total_layanan,
+            'total_retur_detail' => $detail[0]->grantotal_layanan,
+            'status_retur_detail' => 'CLS',
+            'row_id_header' => $row_id_h_ret,
+        ];
+        ts_retur_detail_dummy::create($ts_retur_detail_1);
+        $ts_retur_detail_2 = [
+            'kode_retur_detail' => $this->get_kode_retur_detail(),
+            'tgl_retur_detail' => $tgl_Ret,
+            'kode_retur_header' => $kode_retur_header ,
+            'id_layanan_detail' => '',
+            'qty_awal' => 1,
+            'qty_retur' => '1',
+            'qty_sisa' => '0',
+            'tarif_layanan' => '1700',
+            'total_retur_detail' => '1700',
+            'status_retur_detail' => 'CLS',
+            'row_id_header' => $row_id_h_ret,
+        ];
+        ts_retur_detail_dummy::create($ts_retur_detail_2);
+        if (count($cek_detail) <= 1) {
+            $ts_retur_detail_3 = [
+                'kode_retur_detail' =>  $this->get_kode_retur_detail(),
+                'tgl_retur_detail' => $tgl_Ret,
+                'kode_retur_header' =>$kode_retur_header ,
+                'id_layanan_detail' => '',
+                'qty_awal' => 1,
+                'qty_retur' => '1',
+                'qty_sisa' => '0',
+                'tarif_layanan' => '1000',
+                'total_retur_detail' => '1000',
+                'status_retur_detail' => 'CLS',
+                'row_id_header' => $row_id_h_ret,
+            ];
+        ts_retur_detail_dummy::create($ts_retur_detail_3);
+        }
+        $update_header = [
+            'status_layanan' => $status_layanan_header,
+            'status_retur' => $status_retur,
+            'tagihan_penjamin' => $tagihan_penjamin,
+            'tagihan_pribadi' => $tagihan_pribadi,
+        ];
+
+        ts_layanan_header_dummy::where('id', $id_header)->update($update_header);
+        // $UNIT =  $header[0]->kode_unit;
+        // $KODEBARANG =  $detail[0]->kode_barang;
+        // $stok_in =  $$detail[0]->jumlah_layanan;
+        // $cek_stok = db::select('SELECT * FROM ti_kartu_stok WHERE NO = ( SELECT MAX(a.no ) AS nomor FROM ti_kartu_stok a WHERE kode_barang = ? AND kode_unit = ? )', ([$KODEBARANG, $UNIT]));
+        // $stok_current = $cek_stok[0]->stok_current + $stok_in;
+        // $stok_out = 0;
+        // $stok_last = $cek_stok[0]->stok_current;
+        // $ti_kartu_stok = [];
+        $data = [
+            'kode' => 200,
+            'message' => 'Sukses',
+        ];
+        echo json_encode($data);
     }
     public function cetaknotafarmasi($id)
     {
