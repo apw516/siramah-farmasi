@@ -12,7 +12,7 @@
         @foreach ($detail as $d)
             {{-- @if ($h->id == $d->row_id_header) --}}
             <tr>
-                <td>{{ $d->nama_barang }}</td>
+                <td>{{ $d->nama_barang }} {{ $d->nama_racik }}</td>
                 <td>{{ $d->aturan_pakai }}</td>
                 <td>{{ $d->nama_anestesi }} @if ($d->tipe_racik == 'S' || $d->tipe_racik == 'NS')
                         / {{ $d->tipe_racik }}

@@ -1192,7 +1192,7 @@ class PelayananController extends Controller
         //insert resep hibah
         if ($cek_hib > 0) {
             //cek stok obat 2
-            foreach ($arrayindex_kemo as $a) {
+            foreach ($arrayindex_hibah as $a) {
                 $cek_stok = db::select('SELECT * FROM ti_kartu_stok WHERE NO = ( SELECT MAX(a.no ) AS nomor FROM ti_kartu_stok a WHERE kode_barang = ? AND kode_unit = ? )', ([$a['kode_barang_order'], '4008']));
                 $stok_current = $cek_stok[0]->stok_current - $a['qty_order'];
                 if ($stok_current < 0) {
@@ -1241,7 +1241,7 @@ class PelayananController extends Controller
             $now = $this->get_now();
             $totalheader = 0;
             //insert layanan detail obat reguler
-            foreach ($arrayindex_kemo as $a) {
+            foreach ($arrayindex_hibah as $a) {
                 $mt_barang = DB::select('select * from mt_barang where kode_barang = ?', [$a['kode_barang_order']]);
                 $total = $a['harga2_order'] * $a['qty_order'];
                 $diskon = $a['disc_order'];
@@ -1345,7 +1345,6 @@ class PelayananController extends Controller
                 ];
                 $detail2 = ts_layanan_detail_dummy::create($ts_layanan_detail2);
             }
-
             if ($data_kunjungan[0]->kode_penjamin != 'P01') {
                 $tagian_penjamin_head = 0;
                 $tagian_pribadi_head = 0;
@@ -1353,7 +1352,6 @@ class PelayananController extends Controller
                 $tagian_penjamin_head = 0;
                 $tagian_pribadi_head = 0;
             }
-
             $ts_layanan_detail3 = [
                 'id_layanan_detail' => $this->createLayanandetail(),
                 'kode_layanan_header' => $kode_layanan_header,
@@ -1370,7 +1368,6 @@ class PelayananController extends Controller
                 'row_id_header' => $header->id,
             ];
             $detail3 = ts_layanan_detail_dummy::create($ts_layanan_detail3);
-
             //update layanan header
             $totalheader = $totalheader + 0;
             if ($data_kunjungan[0]->kode_penjamin != 'P01') {
@@ -1450,7 +1447,7 @@ class PelayananController extends Controller
     {
         $kodekunjungan = $request->kode;
         $header = DB::connection('mysql2')->select('select * from ts_layanan_header where kode_kunjungan = ? AND status_layanan < ?', [$kodekunjungan, 3]);
-        $detail = DB::connection('mysql2')->select('SELECT b.id,row_id_header,kode_barang,fc_nama_barang(kode_barang) AS nama_barang,aturan_pakai,jumlah_layanan,jumlah_retur,grantotal_layanan,a.`total_layanan`,c.nama_anestesi,d.tipe_racik,b.status_layanan_detail FROM ts_layanan_header a
+        $detail = DB::connection('mysql2')->select('SELECT d.nama_racik,b.id,row_id_header,kode_barang,fc_nama_barang(kode_barang) AS nama_barang,aturan_pakai,jumlah_layanan,jumlah_retur,grantotal_layanan,a.`total_layanan`,c.nama_anestesi,d.tipe_racik,b.status_layanan_detail FROM ts_layanan_header a
         LEFT OUTER JOIN ts_layanan_detail b ON a.`id` = b.`row_id_header`
         LEFT OUTER JOIN mt_anestesi_tipe c on b.tipe_anestesi = c.id
         LEFT OUTER JOIN mt_racikan d on b.kode_barang = d.kode_racik
@@ -1844,6 +1841,16 @@ class PelayananController extends Controller
             echo json_encode($data);
             die;
         }
+        $cek_resep = DB::connection('mysql2')->select('SELECT b.`kode_racik` FROM ts_layanan_detail a
+        LEFT OUTER JOIN mt_racikan b ON a.kode_barang = b.kode_racik where a.id = ?',[$id_detail]);
+        if($cek_resep[0]->kode_racik != ''){
+            $data = [
+                'kode' => 500,
+                'message' => 'Racikan tidak bisa diretur !',
+            ];
+            echo json_encode($data);
+            die;
+        }
         $id_header = $detail[0]->row_id_header;
         $header = DB::connection('mysql2')->select('select * from ts_layanan_header where id = ?', [$id_header]);
         $kode_kunjungan = $header[0]->kode_kunjungan;
@@ -1863,8 +1870,6 @@ class PelayananController extends Controller
         ];
         ts_layanan_detail_dummy::where('row_id_header', $id_header)->where('kode_tarif_detail', 'TX23513')
             ->update($update_layanan_detail_2);
-
-
 
         if ($header[0]->kode_tipe_transaksi == 1) {
             $total_header = $header[0]->tagihan_pribadi - $detail[0]->grantotal_layanan;
@@ -1920,8 +1925,9 @@ class PelayananController extends Controller
         $rh = ts_retur_header_dummy::create($ts_retur_header);
         $row_id_h_ret = $rh->id;
         $tgl_Ret = $this->get_now();
+        $KODE_DET_RET = $this->get_kode_retur_detail();
         $ts_retur_detail_1 = [
-            'kode_retur_detail' => $this->get_kode_retur_detail(),
+            'kode_retur_detail' => $KODE_DET_RET ,
             'tgl_retur_detail' => $tgl_Ret,
             'kode_retur_header' => $kode_retur_header,
             'id_layanan_detail' => '',
@@ -1970,16 +1976,30 @@ class PelayananController extends Controller
             'tagihan_penjamin' => $tagihan_penjamin,
             'tagihan_pribadi' => $tagihan_pribadi,
         ];
-
         ts_layanan_header_dummy::where('id', $id_header)->update($update_header);
-        // $UNIT =  $header[0]->kode_unit;
-        // $KODEBARANG =  $detail[0]->kode_barang;
-        // $stok_in =  $$detail[0]->jumlah_layanan;
-        // $cek_stok = db::select('SELECT * FROM ti_kartu_stok WHERE NO = ( SELECT MAX(a.no ) AS nomor FROM ti_kartu_stok a WHERE kode_barang = ? AND kode_unit = ? )', ([$KODEBARANG, $UNIT]));
-        // $stok_current = $cek_stok[0]->stok_current + $stok_in;
-        // $stok_out = 0;
-        // $stok_last = $cek_stok[0]->stok_current;
-        // $ti_kartu_stok = [];
+        $UNIT =  $header[0]->kode_unit;
+        $KODEBARANG =  $detail[0]->kode_barang;
+        $stok_in =  $detail[0]->jumlah_layanan;
+        $cek_stok = db::select('SELECT * FROM ti_kartu_stok WHERE NO = ( SELECT MAX(a.no ) AS nomor FROM ti_kartu_stok a WHERE kode_barang = ? AND kode_unit = ? )', ([$KODEBARANG, $UNIT]));
+        $stok_current = $cek_stok[0]->stok_current + $stok_in;
+        $stok_out = 0;
+        $stok_last = $cek_stok[0]->stok_current;
+        $mt_barang = DB::select('select * from mt_barang where kode_barang = ?', [$KODEBARANG]);
+        $data_kunjungan = DB::select('select *,fc_nama_px(no_rm) AS nama_pasien,fc_alamat(no_rm) AS alamat_pasien from ts_kunjungan where kode_kunjungan = ?', [$header[0]->kode_kunjungan]);
+        $ti_kartu_stok = [
+            'no_dokumen' => $kode_retur_header,
+            'no_dokumen_detail' => $KODE_DET_RET,
+            'tgl_stok' => $this->get_now(),
+            'kode_unit' => '4008',
+            'kode_barang' => $KODEBARANG ,
+            'stok_last' => $stok_last,
+            'stok_in' => $stok_in,
+            'stok_current' => $stok_current,
+            'harga_beli' => $mt_barang[0]->hna,
+            'inputby' => '1',
+            'keterangan' => $data_kunjungan[0]->no_rm . '|' . $data_kunjungan[0]->nama_pasien . '|' . $data_kunjungan[0]->alamat_pasien
+        ];
+        $insert_ti_kartu_stok = ti_kartu_stok::create($ti_kartu_stok);
         $data = [
             'kode' => 200,
             'message' => 'Sukses',
