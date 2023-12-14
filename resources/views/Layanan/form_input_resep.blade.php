@@ -2,27 +2,34 @@
 <input hidden type="text" value="{{ $datakunjungan[0]->kode_kunjungan }}" id="kodekunjungan">
 <input hidden type="text" value="{{ $datakunjungan[0]->no_rm }}" id="rm">
 <div class="row">
-    <div class="col-md-3">
+    <div class="col-md-2">
         <div class="card">
             <div class="card-header bg-info">Data Pasien</div>
             <div class="card-body">
                 <!-- Profile Image -->
-                <div class="card card-primary card-outline">
+                <div class="card card-primary card-outline text-xs">
                     <h3 class="profile-username text-center text-bold">{{ $datapasien[0]->nama_px }}</h3>
-
-                    <p class="text-dark text-center text-bold">{{ $datapasien[0]->alamatnya }}</p>
-
+                    <p class="text-dark text-center text-bold mr-2 ml-2">{{ $datapasien[0]->alamatnya }}</p>
                     <ul class="list-group list-group-unbordered mb-3">
                         <li class="list-group-item">
-                            <b>Nomor RM</b> <a class="float-right text-dark text-bold">{{ $datapasien[0]->no_rm }}</a>
+                            <b class="ml-2 mr-2">Nomor RM</b> <a
+                                class="float-right text-dark text-bold ml-2 mr-2">{{ $datapasien[0]->no_rm }}</a>
                         </li>
                         <li class="list-group-item">
-                            <b>Tanggal lahir</b> <a
-                                class="float-right  text-dark text-bold">{{ $datapasien[0]->tgl_lahir }}</a>
+                            <b class="ml-2 mr-2">Tanggal lahir</b> <a
+                                class="float-right  text-dark text-bold ml-2 mr-2">{{ $datapasien[0]->tgl_lahir }}</a>
                         </li>
                         <li class="list-group-item">
-                            <b>Penjamin</b> <a
-                                class="float-right text-dark text-bold">{{ $datakunjungan[0]->nama_penjamin }}</a>
+                            <b class="ml-2 mr-2">Umur</b> <a
+                                class="float-right  text-dark text-bold ml-2 mr-2">{{ $datapasien[0]->umur }}</a>
+                        </li>
+                        <li class="list-group-item">
+                            <b class="ml-2 mr-2">Diagnosa</b> <a
+                                class="float-right  text-dark text-bold ml-2 mr-2">{{ $diagnosa }}</a>
+                        </li>
+                        <li class="list-group-item">
+                            <b class="ml-2 mr-2">Penjamin</b><a
+                                class="float-right text-dark text-bold ml-2 mr-2">{{ $datakunjungan[0]->nama_penjamin }}</a>
                         </li>
                     </ul>
                 </div>
@@ -40,7 +47,7 @@
             </div>
         </div>
     </div>
-    <div class="col-md-5">
+    <div class="col-md-6">
         <div class="card">
             <div class="card-header bg-info">Riwayat Obat Hari ini</div>
             <div class="card-body">
@@ -56,6 +63,7 @@
         <div class="card-header p-2">
             <ul class="nav nav-pills">
                 <li class="nav-item"><a class="nav-link active" href="#activity2" data-toggle="tab">Resep Obat</a></li>
+                <li class="nav-item mr-1 ml-1"><button hidden class="btn btn-danger" id="lihatorder">Lihat Order</button></li>
             </ul>
         </div>
         <div class="card-body">
@@ -309,98 +317,6 @@
                     </div>
                 </div>
                 <div class="col-md-12">
-                    {{-- <div class="row mt-1"> --}}
-                    {{-- <div class="col-md-4">
-                            <div class="form-group">
-                                <label for="exampleFormControlInput1">Nama Barang / Layanan</label>
-                                <input readonly type="text" class="form-control text-sm"
-                                    id="pre_nama_barang_racik" placeholder="Nama Barang / Layanan">
-                                <input hidden readonly type="text" class="form-control text-xs"
-                                    id="pre_kode_racik" placeholder="Nama Barang / Layanan">
-                                <input hidden readonly type="text" class="form-control text-xs"
-                                    id="pre_id_ti_racik" placeholder="Nama Barang / Layanan">
-                                <input hidden type="text" class="form-control text-xs" id="harga2_racik"
-                                    placeholder="Nama Barang / Layanan">
-                                <input hidden readonly type="text" class="form-control text-xs"
-                                    id="pre_satuan_racik" placeholder="Nama Barang / Layanan">
-                            </div>
-                        </div> --}}
-                    {{-- <div class="col-sm-1">
-                            <div class="form-group">
-                                <label for="exampleFormControlInput1">Stok</label>
-                                <input readonly type="text" class="form-control text-sm" id="pre_stok_racik"
-                                    placeholder="stok">
-                            </div>
-                        </div> --}}
-                    {{-- <div class="col-md-1">
-                            <div class="form-group">
-                                <label for="exampleFormControlInput1">Dosis</label>
-                                <input readonly type="text" class="form-control" id="dosis_obat"
-                                    placeholder="dosis_obat">
-                            </div>
-                        </div>
-                        <div class="col-md-2">
-                            <div class="form-group">
-                                <label for="exampleFormControlInput1">Dosis Racik</label>
-                                <input type="text" class="form-control text-sm" id="dosis_racik"
-                                    placeholder="dosis racik ..." value="0">
-                            </div>
-                        </div> --}}
-                    {{-- <div hidden class="col-md-1">
-                            <div class="form-group">
-                                <label for="exampleFormControlInput1">Disc(%)</label>
-                                <input type="text" class="form-control" id="pre_disc"
-                                    placeholder="Discount_racik" value="0" oninput="hitungdiskon()">
-                            </div>
-                        </div>
-                        <div hidden class="col-md-2">
-                            <div class="form-group">
-                                <label for="exampleFormControlInput1">Dosis Pakai</label>
-                                <textarea type="text" class="form-control text-xs" id="pre_dosis_racik" placeholder="Dosis Pakai"></textarea>
-                            </div>
-                        </div>
-                        <div hidden class="col-md-2">
-                            <div class="form-group">
-                                <label for="exampleFormControlInput1">Sub Total</label>
-                                <input readonly type="text" class="form-control text-xs" id="pre_sub_racik"
-                                    placeholder="Sub total" value="0">
-                                <input hidden readonly type="text" class="form-control text-xs"
-                                    id="pre_sub_2_racik" placeholder="Sub total" value="0">
-                            </div>
-                        </div>
-                        <div hidden class="col-md-1">
-                            <div class="form-group">
-                                <label for="exampleFormControlInput1">Status</label><br>
-                                <div class="form-check form-check-inline">
-                                    <input class="form-check-input" type="radio" name="inlineRadioOptions"
-                                        id="status" value="81">
-                                    <label class="form-check-label" for="inlineRadio1">KRONIS</label>
-                                </div>
-                                <div class="form-check form-check-inline">
-                                    <input class="form-check-input" type="radio" name="inlineRadioOptions"
-                                        id="status" value="83">
-                                    <label class="form-check-label" for="inlineRadio2">HIBAH</label>
-                                </div>
-                                <div class="form-check form-check-inline">
-                                    <input class="form-check-input" type="radio" name="inlineRadioOptions"
-                                        id="status" value="80" checked>
-                                    <label class="form-check-label" for="inlineRadio3">REGULER</label>
-                                </div>
-                                <div class="form-check form-check-inline">
-                                    <input class="form-check-input" type="radio" name="inlineRadioOptions"
-                                        id="status" value="82">
-                                    <label class="form-check-label" for="inlineRadio3">KEMOTHERAPI</label>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-md-1">
-                            <div class="form-group">
-                                <label for="exampleFormControlInput1">Action</label><br>
-                                <button class="btn btn-secondary btn-sm" onclick="simpandraft_racik()"><i
-                                        class="bi bi-arrow-down mr-1"></i></button>
-                            </div>
-                        </div> --}}
-                    {{-- </div> --}}
                     <div class="row mt-1">
                         <div class="col-md-4">
                             <div class="form-group">
@@ -441,8 +357,7 @@
                         <div class="col-md-1">
                             <div class="form-group">
                                 <label for="exampleFormControlInput1">Dosis</label>
-                                <input readonly type="text" class="form-control" id="dosis_obat"
-                                    placeholder="dosis_obat">
+                                <input type="text" class="form-control" id="dosis_obat" placeholder="dosis_obat">
                             </div>
                         </div>
                         <div class="col-md-2">
@@ -536,13 +451,64 @@
         </div>
     </div>
 </div>
+<div class="modal fade" id="modallihatorderan" tabindex="-1" aria-labelledby="exampleModalLabel"
+    aria-hidden="true" data-backdrop="static">
+    <div class="modal-dialog modal-dialog1 modal-xl">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="exampleModalLabel">Data Order</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
 
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" onclick="simpankomponen_racik()">Simpan</button>
+            </div>
+        </div>
+    </div>
+</div>
+<style>
+    #modallihatorderan {
+        position: relative;
+    }
+
+    .modal-dialog1 {
+        position: fixed;
+        width: 100%;
+        margin: 0;
+        padding: 10px;
+    }
+</style>
 <script>
     $(document).ready(function() {
         kode = $('#kodekunjungan').val()
         get_data_order_poli(kode)
         get_riwayat_obat_tdy(kode)
     })
+
+    $('#lihatorder').click(function() {
+        // reset modal if it isn't visible
+        if (!($('.modal.in').length)) {
+            $('.modal-dialog').css({
+                top: 0,
+                left: 0
+            });
+        }
+        $('#modallihatorderan').modal({
+            backdrop: false,
+            show: true,
+            backdrop: 'static',
+            keyboard: false
+        });
+
+        $('.modal-dialog1').draggable({
+            handle: ".modal-header"
+        });
+    });
 
     function kembali() {
         $('#v_1').removeAttr('Hidden', true)
@@ -711,109 +677,143 @@
             jasa_baca_reguler = $('#jasa_baca_reguler').val()
             if (x < max_fields) { //max input box allowed
                 x++; //text box increment
-                $(wrapper).append(
-                    '<div class="form-row text-xs"><div class="form-group col-md-2"><label for="">Nama Barang / Tindakan</label><input readonly type="" class="form-control form-control-sm text-xs edit_field" id="" name="nama_barang_order" value="' +
-                    namabarang +
-                    '"><input hidden readonly type="" class="form-control form-control-sm" id="" name="kode_barang_order" value="' +
-                    kode +
-                    '"><input hidden readonly type="" class="form-control form-control-sm" id="" name="id_stok_order" value="' +
-                    id_stok +
-                    '"><input hidden readonly type="" class="form-control form-control-sm" id="" name="harga2_order" value="' +
-                    harga2 +
-                    '"><input hidden readonly type="" class="form-control form-control-sm" id="" name="sub_total_order_2" value="' +
-                    subtot2 +
-                    '"><input hidden readonly type="" class="form-control form-control-sm" id="" name="status_order_2" value="' +
-                    status +
-                    '"><input hidden readonly type="" class="form-control form-control-sm" id="" name="id_racik" value="0"></div><div class="form-group col-md-1"><label for="inputPassword4">Stok</label><input readonly type="" class="form-control form-control-sm" id="" name="stok_curr_order" value="' +
-                    stok_curr +
-                    '"></div><div class="form-group col-md-1"><label for="inputPassword4">Qty</label><input readonly type="" class="form-control form-control-sm" id="" name="qty_order" value="' +
-                    qty +
-                    '"></div><div class="form-group col-md-1"><label for="inputPassword4">Satuan</label><input readonly type="" class="form-control form-control-sm" id="" name="satuan_order" value="' +
-                    satuan +
-                    '"></div><div class="form-group col-md-1"><label for="inputPassword4">Harga</label><input readonly type="" class="form-control form-control-sm text-xs" id="" name="harga_order" value="' +
-                    harga +
-                    '"></div><div class="form-group col-md-1"><label for="inputPassword4">Diskon</label><input readonly type="" class="form-control form-control-sm" id="" name="disc_order" value="' +
-                    disc +
-                    '"></div><div class="form-group col-md-2"><label for="inputPassword4">Aturan Pakai</label><input readonly type="" class="form-control form-control-sm text-xs" id="" name="dosis_order" value="' +
-                    dosis +
-                    '"></div><div class="form-group col-md-1"><label for="inputPassword4">Status</label><input readonly type="" class="form-control form-control-sm text-xs" id="" name="status_order_1" value="' +
-                    so +
-                    '"></div><div hidden class="form-group col-md-1"><label for="inputPassword4">Tipe</label><input readonly type="" class="form-control form-control-sm text-xs" id="" name="status_order_3" value="NON-RACIKAN"></div><div class="form-group col-md-1"><label for="inputPassword4">Sub Total</label><input readonly type="" class="form-control form-control-sm text-xs" id="" name="sub_total_order" value="' +
-                    subtot +
-                    '"></div><i class="bi bi-x-square remove_field form-group col-md-1 text-danger" kode2="' +
-                    kode + '" subtot="' + subtot2 + '" jenis="' + status + '" nama_barang="' + namabarang +
-                    '" kode_barang="' + kode + '" id_stok="' + id_stok + '" harga2="' + harga2 + '" satuan="' +
-                    satuan + '" stok="' + stok_curr + '" qty="' + qty + '" harga="' + harga + '" disc="' + disc +
-                    '" dosis="' + disc + '" sub="' + subtot + '" sub2="' + subtot2 + '" status="' + status +
-                    '" jenisracik="non-racikan""></i></div>'
-                );
-                $(wrapper).on("click", ".remove_field", function(e) { //user click on remove
-                    qty_item = $(this).attr('qty')
-                    harga_item = $(this).attr('harga2')
-                    total_layanan_1 = $(this).attr('subtot')
-                    jenisracik = $(this).attr('jenisracik')
-                    status = $(this).attr('status')
-                    $('#' + kode).removeAttr('status', true)
-                    e.preventDefault();
-                    $(this).parent('div').remove();
-                    x--;
-                    gt_lama_2 = $('#gt_total_layanan_reguler').val()
-                    gt_total_item_2 = $('#gt_total_item').val()
-                    gt_total_resep_2 = $('#gt_total_resep').val()
-                    resep_kronis_2 = $('#resep_kronis').val()
-                    resep_hibah_2 = $('#resep_hibah').val()
-                    resep_reguler_2 = $('#resep_reguler').val()
-                    resep_kemo_2 = $('#resep_kemo').val()
-                    jasa_baca_reguler_2 = $('#jasa_baca_reguler').val()
-                    $.ajax({
-                        type: 'post',
-                        data: {
-                            _token: "{{ csrf_token() }}",
-                            qty_item,
-                            harga_item,
-                            status,
-                            gt_lama_2,
-                            gt_total_item_2,
-                            gt_total_resep_2,
-                            resep_kronis_2,
-                            resep_hibah_2,
-                            resep_reguler_2,
-                            resep_kemo_2,
-                            jasa_baca_reguler_2,
-                            total_layanan_1,
-                            jenisracik
-                        },
-                        url: '<?= route('minus_grand_total') ?>',
-                        success: function(response) {
-                            $('.gt_obat_reguler').html(response);
+                $.ajax({
+                    async: true,
+                    type: 'post',
+                    dataType: 'json',
+                    data: {
+                        _token: "{{ csrf_token() }}",
+                        kode,
+                        status
+                    },
+                    url: '<?= route('cek_obat_hibah') ?>',
+                    error: function(data) {
+                        spinner.hide()
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Ooops....',
+                            text: 'Sepertinya ada masalah......',
+                            footer: ''
+                        })
+                    },
+                    success: function(data) {
+                        spinner.hide()
+                        if (data.kode == 200) {
+                            $(wrapper).append(
+                                '<div class="form-row text-xs"><div class="form-group col-md-2"><label for="">Nama Barang / Tindakan</label><input readonly type="" class="form-control form-control-sm text-xs edit_field" id="" name="nama_barang_order" value="' +
+                                namabarang +
+                                '"><input hidden readonly type="" class="form-control form-control-sm" id="" name="kode_barang_order" value="' +
+                                kode +
+                                '"><input hidden readonly type="" class="form-control form-control-sm" id="" name="id_stok_order" value="' +
+                                id_stok +
+                                '"><input hidden readonly type="" class="form-control form-control-sm" id="" name="harga2_order" value="' +
+                                harga2 +
+                                '"><input hidden readonly type="" class="form-control form-control-sm" id="" name="sub_total_order_2" value="' +
+                                subtot2 +
+                                '"><input hidden readonly type="" class="form-control form-control-sm" id="" name="status_order_2" value="' +
+                                data.status +
+                                '"><input hidden readonly type="" class="form-control form-control-sm" id="" name="id_racik" value="0"></div><div class="form-group col-md-1"><label for="inputPassword4">Stok</label><input readonly type="" class="form-control form-control-sm" id="" name="stok_curr_order" value="' +
+                                stok_curr +
+                                '"></div><div class="form-group col-md-1"><label for="inputPassword4">Qty</label><input readonly type="" class="form-control form-control-sm" id="" name="qty_order" value="' +
+                                qty +
+                                '"></div><div class="form-group col-md-1"><label for="inputPassword4">Satuan</label><input readonly type="" class="form-control form-control-sm" id="" name="satuan_order" value="' +
+                                satuan +
+                                '"></div><div class="form-group col-md-1"><label for="inputPassword4">Harga</label><input readonly type="" class="form-control form-control-sm text-xs" id="" name="harga_order" value="' +
+                                harga +
+                                '"></div><div class="form-group col-md-1"><label for="inputPassword4">Diskon</label><input readonly type="" class="form-control form-control-sm" id="" name="disc_order" value="' +
+                                disc +
+                                '"></div><div class="form-group col-md-2"><label for="inputPassword4">Aturan Pakai</label><input readonly type="" class="form-control form-control-sm text-xs" id="" name="dosis_order" value="' +
+                                dosis +
+                                '"></div><div class="form-group col-md-1"><label for="inputPassword4">Status</label><input readonly type="" class="form-control form-control-sm text-xs" id="" name="status_order_1" value="' +
+                                data.nama +
+                                '"></div><div hidden class="form-group col-md-1"><label for="inputPassword4">Tipe</label><input readonly type="" class="form-control form-control-sm text-xs" id="" name="status_order_3" value="NON-RACIKAN"></div><div class="form-group col-md-1"><label for="inputPassword4">Sub Total</label><input readonly type="" class="form-control form-control-sm text-xs" id="" name="sub_total_order" value="' +
+                                subtot +
+                                '"></div><i class="bi bi-x-square remove_field form-group col-md-1 text-danger" kode2="' +
+                                kode + '" subtot="' + subtot2 + '" jenis="' + status +
+                                '" nama_barang="' + namabarang +
+                                '" kode_barang="' + kode + '" id_stok="' + id_stok + '" harga2="' +
+                                harga2 + '" satuan="' +
+                                satuan + '" stok="' + stok_curr + '" qty="' + qty + '" harga="' +
+                                harga + '" disc="' + disc +
+                                '" dosis="' + disc + '" sub="' + subtot + '" sub2="' + subtot2 +
+                                '" status="' + status +
+                                '" jenisracik="non-racikan""></i></div>'
+                            );
+                            var data1 = $('.form_draf_obat_reguler').serializeArray();
+                            $(wrapper).on("click", ".remove_field", function(e) { //user click on remove
+                                qty_item = $(this).attr('qty')
+                                harga_item = $(this).attr('harga2')
+                                total_layanan_1 = $(this).attr('subtot')
+                                jenisracik = $(this).attr('jenisracik')
+                                status = $(this).attr('status')
+                                $('#' + kode).removeAttr('status', true)
+                                e.preventDefault();
+                                $(this).parent('div').remove();
+                                x--;
+                                gt_lama_2 = $('#gt_total_layanan_reguler').val()
+                                gt_total_item_2 = $('#gt_total_item').val()
+                                gt_total_resep_2 = $('#gt_total_resep').val()
+                                resep_kronis_2 = $('#resep_kronis').val()
+                                resep_hibah_2 = $('#resep_hibah').val()
+                                resep_reguler_2 = $('#resep_reguler').val()
+                                resep_kemo_2 = $('#resep_kemo').val()
+                                jasa_baca_reguler_2 = $('#jasa_baca_reguler').val()
+                                var data2 = $('.form_draf_obat_reguler').serializeArray();
+                                $.ajax({
+                                    type: 'post',
+                                    data: {
+                                        _token: "{{ csrf_token() }}",
+                                        data1: JSON.stringify(data2),
+                                        qty_item,
+                                        harga_item,
+                                        status,
+                                        gt_lama_2,
+                                        gt_total_item_2,
+                                        gt_total_resep_2,
+                                        resep_kronis_2,
+                                        resep_hibah_2,
+                                        resep_reguler_2,
+                                        resep_kemo_2,
+                                        jasa_baca_reguler_2,
+                                        total_layanan_1,
+                                        jenisracik
+                                    },
+                                    url: '<?= route('minus_grand_total') ?>',
+                                    success: function(response) {
+                                        $('.gt_obat_reguler').html(response);
+                                    }
+                                });
+                            })
+                            $.ajax({
+                                type: 'post',
+                                data: {
+                                    _token: "{{ csrf_token() }}",
+                                    data1: JSON.stringify(data1),
+                                    harga2,
+                                    qty,
+                                    disc,
+                                    status,
+                                    gt_lama,
+                                    gt_total_item,
+                                    gt_total_resep,
+                                    resep_kronis,
+                                    resep_hibah,
+                                    resep_reguler,
+                                    resep_kemo,
+                                    jasa_baca_reguler
+                                },
+                                url: '<?= route('jumlah_grand_total_obat_reguler') ?>',
+                                success: function(response) {
+                                    $('.gt_obat_reguler').html(response);
+                                }
+                            });
+                        } else {
+
                         }
-                    });
-                })
+                    }
+                });
             }
-            var data1 = $('.form_draf_obat_reguler').serializeArray();
-            $.ajax({
-                type: 'post',
-                data: {
-                    _token: "{{ csrf_token() }}",
-                    data1: JSON.stringify(data1),
-                    harga2,
-                    qty,
-                    disc,
-                    status,
-                    gt_lama,
-                    gt_total_item,
-                    gt_total_resep,
-                    resep_kronis,
-                    resep_hibah,
-                    resep_reguler,
-                    resep_kemo,
-                    jasa_baca_reguler
-                },
-                url: '<?= route('jumlah_grand_total_obat_reguler') ?>',
-                success: function(response) {
-                    $('.gt_obat_reguler').html(response);
-                }
-            });
+
         }
     }
 
@@ -846,7 +846,8 @@
                 dosis_obat,
                 harga_obat,
                 tiperacikan,
-                kemasan
+                kemasan,
+                kode_barang
             },
             url: '<?= route('hitunganracikan') ?>',
             error: function(data) {
@@ -854,7 +855,7 @@
                 Swal.fire({
                     icon: 'error',
                     title: 'Ooops....',
-                    text: 'Sepertinya ada masalah......',
+                    text: data.message,
                     footer: ''
                 })
             },
@@ -946,7 +947,12 @@
                         });
                     }
                 } else {
-                    alert(data.message)
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Ooops....',
+                        text: data.message,
+                        footer: ''
+                    })
                 }
             }
         })
@@ -958,7 +964,7 @@
         rm = $('#rm').val()
         spinner = $('#loader')
         spinner.show();
-        $('#btnsimpanorder').attr('disabled',true)
+        $('#btnsimpanorder').attr('disabled', true)
         $.ajax({
             async: true,
             type: 'post',
@@ -977,7 +983,7 @@
                     text: 'Sepertinya ada masalah......',
                     footer: ''
                 })
-                $('#btnsimpanorder').removeAttr('disabled',true)
+                $('#btnsimpanorder').removeAttr('disabled', true)
             },
             success: function(data) {
                 spinner.hide()
@@ -988,9 +994,9 @@
                         text: data.message,
                         footer: ''
                     })
-                    $('#btnsimpanorder').removeAttr('disabled',true)
+                    $('#btnsimpanorder').removeAttr('disabled', true)
                 } else {
-                    $('#btnsimpanorder').removeAttr('disabled',true)
+                    $('#btnsimpanorder').removeAttr('disabled', true)
                     Swal.fire({
                         title: 'Data Berhasil disimpan !',
                         text: "Cetak nota pembayaran . . .",
@@ -1007,6 +1013,7 @@
                                 'Nota berhasil dicetak ...',
                                 'success'
                             )
+                            // window.open('cetaknota/' + data.idheader);
                             window.open('cetaketiket/' + data.idheader);
                             reload_form(rm, kodekunjungan)
                         } else {

@@ -1,5 +1,6 @@
 <table id="riwayat_obat_hari_ini" class="table table-sm table-hover text-sm">
     <thead class="bg-danger">
+        <th>Kode Layanan</th>
         <th>Nama Obat</th>
         <th>Aturan Pakai</th>
         <th>Tipe Resep</th>
@@ -12,6 +13,7 @@
         @foreach ($detail as $d)
             {{-- @if ($h->id == $d->row_id_header) --}}
             <tr>
+                <td>{{ $d->kode_layanan_header }}</td>
                 <td>{{ $d->nama_barang }} {{ $d->nama_racik }}</td>
                 <td>{{ $d->aturan_pakai }}</td>
                 <td>{{ $d->nama_anestesi }} @if ($d->tipe_racik == 'S' || $d->tipe_racik == 'NS')

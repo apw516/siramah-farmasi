@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\PelayananController;
 use Illuminate\Support\Facades\Route;
@@ -9,7 +10,11 @@ use Illuminate\Support\Facades\Route;
 //     return view('dashboard');
 // });
 
-Route::get('/', [DashboardController::class, 'Index'])->name('dashboard');
+Route::get('/', [AuthController::class, 'Index'])->name('index');
+Route::get('/login', [AuthController::class, 'index'])->middleware('guest')->name('login');
+Route::post('/login', [AuthController::class, 'authenticate']);
+Route::get('/logout', [AuthController::class, 'logout'])->name('logout');
+Route::get('/dashboard', [DashboardController::class, 'Index'])->name('dashboard');
 Route::get('layananresep', [PelayananController::class, 'IndexLayananResep'])->name('layananresep');
 Route::post('ambil_orderan_poli', [PelayananController::class, 'AmbilOrderanPoli'])->name('ambil_orderan_poli');
 Route::post('ambil_form_pencarian_pasien', [PelayananController::class, 'FormPencarianPasien'])->name('ambil_form_pencarian_pasien');
@@ -32,4 +37,6 @@ Route::post('detail_obat_racik', [PelayananController::class, 'detail_obat_racik
 Route::post('edit_aturan_pakai', [PelayananController::class, 'edit_aturan_pakai'])->name('edit_aturan_pakai');
 Route::post('simpanedit_aturanpakai', [PelayananController::class, 'simpanedit_aturanpakai'])->name('simpanedit_aturanpakai');
 Route::post('retur_obat', [PelayananController::class, 'retur_obat'])->name('retur_obat');
-Route::get('cetaketiket/{id}', [PelayananController::class, 'cetaknotafarmasi_2']); //formpasien_bpjs
+Route::post('cek_obat_hibah', [PelayananController::class, 'cek_obat_hibah'])->name('cek_obat_hibah');
+Route::get('cetaknota/{id}', [PelayananController::class, 'cetaknotafarmasi']); //formpasien_bpjs
+Route::get('cetaketiket/{id}', [PelayananController::class, 'CetakEtiket']); //formpasien_bpjs

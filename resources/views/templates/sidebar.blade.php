@@ -14,7 +14,7 @@
                     alt="User Image">
             </div>
             <div class="info">
-                <a href="#" class="d-block">ADMIN FARMASI</a>
+                <a href="#" class="d-block">{{auth()->user()->nama }}</a>
             </div>
         </div>
 
@@ -47,7 +47,7 @@
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link">
+                    <a class="nav-link" onclick="logout()">
                         <i class="nav-icon far fa-circle text-warning"></i>
                         <p>Logout</p>
                     </a>

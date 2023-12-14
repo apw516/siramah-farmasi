@@ -53,7 +53,7 @@ class PelayananController extends Controller
         ,status_order
         FROM ts_layanan_header_order a
         LEFT OUTER JOIN ts_kunjungan b ON a.`kode_kunjungan` = b.`kode_kunjungan`
-        WHERE a.kode_unit = ? and date(tgl_entry) = curdate()', (['4008']));
+        WHERE a.kode_unit = ? and date(tgl_entry) = curdate()', ([$this->get_unit_login()]));
         return view('Layanan.tabel_order_poliklinik', compact([
             'cari_order'
         ]));
@@ -76,11 +76,18 @@ class PelayananController extends Controller
     {
         $rm = $request->rm;
         $kodekunjungan = $request->kodekunjungan;
-        $datapasien = DB::select('select no_rm,nama_px,fc_alamat(no_rm) as alamatnya,date(tgl_lahir) as tgl_lahir from mt_pasien where no_rm = ?', [$rm]);
+        $datapasien = DB::select('select no_rm,fc_umur(no_rm) as umur,nama_px,fc_alamat(no_rm) as alamatnya,date(tgl_lahir) as tgl_lahir from mt_pasien where no_rm = ?', [$rm]);
         $datakunjungan = DB::select('select *,fc_NAMA_PENJAMIN2(kode_penjamin) as nama_penjamin from ts_kunjungan where kode_kunjungan = ?', [$kodekunjungan]);
+        $assdok = DB::select('select *  from assesmen_dokters where id_kunjungan = ?',[$kodekunjungan]);
+        if(count($assdok) > 0){
+            $diagnosa = $assdok[0]->diagnosakerja;
+        }else{
+            $diagnosa = '-';
+        }
         return view('Layanan.form_input_resep', compact([
             'datapasien',
-            'datakunjungan'
+            'datakunjungan',
+            'diagnosa'
         ]));
     }
     public function AmbilDataOrderPoli(Request $request)
@@ -95,7 +102,7 @@ class PelayananController extends Controller
     public function cari_obat_reguler(Request $request)
     {
         $nama = $request->namaobat;
-        $pencarian_obat = DB::select('CALL sp_cari_obat_semua(?,?)', [$nama, '4008']);
+        $pencarian_obat = DB::select('CALL sp_cari_obat_semua(?,?)', [$nama, $this->get_unit_login()]);
         return view('Layanan.tabel_obat_reguler', compact([
             'pencarian_obat'
         ]));
@@ -103,7 +110,7 @@ class PelayananController extends Controller
     public function cari_obat_racik(Request $request)
     {
         $nama = $request->namaobat;
-        $pencarian_obat = DB::select('CALL sp_cari_obat_semua(?,?)', [$nama, '4008']);
+        $pencarian_obat = DB::select('CALL sp_cari_obat_semua(?,?)', [$nama, $this->get_unit_login()]);
         // dd($pencarian_obat);
         return view('Layanan.tabel_obat_racik', compact([
             'pencarian_obat'
@@ -144,18 +151,37 @@ class PelayananController extends Controller
             }
             $jasa_1200 = 1200;
             $jasa_500 = 500;
-            if ($ab['status_order_2'] == '80') {
+            $cek_barang = DB::select('SELECT * from mt_barang where kode_barang = ?', [$ab['kode_barang_order']]);
+            if(count($cek_barang) > 0){
+                if ($cek_barang[0]->kode_tipe == 3) {
+                    $resep_hibah = $resep_hibah + 1;
+                } else {
+                    if ($ab['status_order_2'] == '80') {
+                        $resep_reguler = $resep_reguler + 1;
+                    } else if ($ab['status_order_2'] == '81') {
+                        $resep_kronis = $resep_kronis + 1;
+                    } else if ($ab['status_order_2'] == '82') {
+                        $resep_kemo = $resep_kemo + 1;
+                    } else if ($ab['status_order_2'] == '83') {
+                        $resep_reguler = $resep_reguler + 1;
+                    }
+                }
+            }else{
                 $resep_reguler = $resep_reguler + 1;
-            } else if ($ab['status_order_2'] == '81') {
-                $resep_kronis = $resep_kronis + 1;
-            } else if ($ab['status_order_2'] == '82') {
-                $resep_kemo = $resep_kemo + 1;
-            } else if ($ab['status_order_2'] == '83') {
-                $resep_hibah = $resep_hibah + 1;
             }
+            // if ($ab['status_order_2'] == '80') {
+            //     $resep_reguler = $resep_reguler + 1;
+            // } else if ($ab['status_order_2'] == '81') {
+            //     $resep_kronis = $resep_kronis + 1;
+            // } else if ($ab['status_order_2'] == '82') {
+            //     $resep_kemo = $resep_kemo + 1;
+            // } else if ($ab['status_order_2'] == '83') {
+            //     $resep_hibah = $resep_hibah + 1;
+            // }
         }
-        $jasa_baca = $total_item_2 * $jasa_1200;
-        $jasa_embalase = $total_item_2 * $jasa_500;
+        $total_item_3 = $total_item_2 - $resep_hibah;
+        $jasa_baca = $total_item_3 * $jasa_1200;
+        $jasa_embalase = $total_item_3 * $jasa_500;
         if ($resep_reguler > 0) {
             $jlh_reguler = $resep_reguler;
             $reguler = 1;
@@ -204,6 +230,34 @@ class PelayananController extends Controller
             'jlh_hibah',
             'grandtotal'
         ]));
+    }
+    public function cek_obat_hibah(Request $request)
+    {
+        $kodebarang = $request->kode;
+        $status = $request->status;
+        $cek_barang = DB::select('select * from mt_barang where kode_barang = ?', [$kodebarang]);
+        if ($cek_barang[0]->kode_tipe == 3) {
+            $status = '83';
+            $status_name = 'HIBAH';
+        } else {
+            $status = $status;
+            if ($status == '80') {
+                $status_name = 'REGULER';
+            } else if ($status == '81') {
+                $status_name = 'KRONIS';
+            } else if ($status == '82') {
+                $status_name = 'KEMOTHERAPI';
+            } else if ($status == '83') {
+                $status_name = 'REGULER';
+            }
+        }
+        $data = [
+            'kode' => 200,
+            'status' => $status,
+            'nama' => $status_name,
+        ];
+        echo json_encode($data);
+        die;
     }
     public function jumlah_grand_total_racikan(Request $request)
     {
@@ -263,60 +317,118 @@ class PelayananController extends Controller
     }
     public function minus_grand_total_reguler(Request $request)
     {
-        $jenisracik = $request->jenisracik;
-        $jenis_resep = $request->status;
-        $total_layanan = $request->gt_lama_2 - $request->total_layanan_1;
-        $total_item = $request->gt_total_item_2 - 1;
-        $resep_kronis = $request->resep_kronis_2;
-        $resep_hibah = $request->resep_hibah_2;
-        $resep_reguler = $request->resep_reguler_2;
-        $resep_kemo = $request->resep_kemo_2;
-        $jlh_reguler = $resep_reguler;
-        $jlh_kronis = $resep_kronis;
-        $jlh_hibah = $resep_hibah;
-        $jlh_kemo = $resep_kemo;
-        if ($jenis_resep == 80) {
-            $resep_reguler = $resep_reguler - 1;
-            $jlh_reguler = $resep_reguler;
-        }
-        if ($jenis_resep == 81) {
-            $resep_kronis = $resep_kronis - 1;
-            $jlh_kronis = $resep_kronis;
-        }
-        if ($jenis_resep == 82) {
-            $resep_kemo = $resep_kemo - 1;
-            $jlh_kemo = $resep_kemo;
-        }
-        if ($jenis_resep == 83) {
-            $resep_hibah = $resep_hibah - 1;
-            $jlh_hibah = $resep_hibah;
-        }
+        $data_obat = json_decode($_POST['data1'], true);
+        $arrayindex_reguler = [];
+        $arrayindex_kronis = [];
+        $arrayindex_kemo = [];
+        $arrayindex_hibah = [];
+        //normalisasi array dan pemisahan jenis jenis resep
+        $total_layanan = 0;
+        if(count($data_obat)  > 0){
+            foreach ($data_obat as $nama) {
+                $index = $nama['name'];
+                $value = $nama['value'];
+                $dataSet[$index] = $value;
+                if ($index == 'sub_total_order') {
+                    $arrayindex_far[] = $dataSet;
+                }
+            }
+            $total_layanan = 0;
+            $total_item = 0;
+            $total_item_2 = 0;
+            $resep_reguler = 0;
+            $resep_kronis = 0;
+            $resep_kemo = 0;
+            $resep_hibah = 0;
 
-        if ($resep_reguler > 0) {
-            $reguler = 1;
+            foreach ($arrayindex_far as  $ab) {
+                $total_layanan = $total_layanan + $ab['sub_total_order_2'];
+                if ($ab['status_order_3'] == 'RACIKAN') {
+                    $total_item++;
+                    $total_item_2;
+                } else {
+                    $total_item++;
+                    $total_item_2++;
+                }
+                $jasa_1200 = 1200;
+                $jasa_500 = 500;
+                $cek_barang = DB::select('SELECT * from mt_barang where kode_barang = ?', [$ab['kode_barang_order']]);
+                if ($cek_barang[0]->kode_tipe == 3) {
+                    $resep_hibah = $resep_hibah + 1;
+                } else {
+                    if ($ab['status_order_2'] == '80') {
+                        $resep_reguler = $resep_reguler + 1;
+                    } else if ($ab['status_order_2'] == '81') {
+                        $resep_kronis = $resep_kronis + 1;
+                    } else if ($ab['status_order_2'] == '82') {
+                        $resep_kemo = $resep_kemo + 1;
+                    } else if ($ab['status_order_2'] == '83') {
+                        $resep_reguler = $resep_reguler + 1;
+                    }
+                }
+
+
+                // if ($ab['status_order_2'] == '80') {
+                //     $resep_reguler = $resep_reguler + 1;
+                // } else if ($ab['status_order_2'] == '81') {
+                //     $resep_kronis = $resep_kronis + 1;
+                // } else if ($ab['status_order_2'] == '82') {
+                //     $resep_kemo = $resep_kemo + 1;
+                // } else if ($ab['status_order_2'] == '83') {
+                //     $resep_hibah = $resep_hibah + 1;
+                // }
+            }
+            $total_item_3 = $total_item_2 - $resep_hibah;
+            $jasa_baca = $total_item_3 * $jasa_1200;
+            $jasa_embalase = $total_item_3 * $jasa_500;
+            if ($resep_reguler > 0) {
+                $jlh_reguler = $resep_reguler;
+                $reguler = 1;
+            } else {
+                $jlh_reguler = 0;
+                $reguler = 0;
+            }
+            if ($resep_kronis > 0) {
+                $jlh_kronis = $resep_kronis;
+                $kronis = 1;
+            } else {
+                $kronis = 0;
+                $jlh_kronis = 0;
+            }
+            if ($resep_kemo > 0) {
+                $kemo = 1;
+                $jlh_kemo = $resep_kemo;
+            } else {
+                $kemo = 0;
+                $jlh_kemo = 0;
+            }
+            if ($resep_hibah > 0) {
+                $hibah = 1;
+                $jlh_hibah = $resep_hibah;
+            } else {
+                $hibah = 0;
+                $jlh_hibah = 0;
+            }
         } else {
+            $total_layanan = 0;
+            $total_item = 0;
+            $jasa_baca = 0;
+            $jasa_embalase = 0;
+            $total_resep = 0;
+            $jasa_resep = 0;
             $reguler = 0;
-        }
-        if ($resep_kronis > 0) {
-            $kronis = 1;
-        } else {
             $kronis = 0;
-        }
-        if ($resep_kemo > 0) {
-            $kemo = 1;
-        } else {
             $kemo = 0;
-        }
-        if ($resep_hibah > 0) {
-            $hibah = 1;
-        } else {
             $hibah = 0;
+            $jlh_reguler = 0;
+            $jlh_kronis = 0;
+            $jlh_kemo = 0;
+            $jlh_hibah = 0;
+            $grandtotal = 0;
         }
-
         $total_resep = $reguler + $kronis + $kemo + $hibah;
-        $jasa_baca = $total_item * 1200;
-        $jasa_embalase = $total_item * 500;
         $jasa_resep = 1000 * $total_resep;
+        $grandtotal = $total_layanan + $jasa_resep + $jasa_baca + $jasa_embalase;
         return view('Layanan.form_gt_obat_reguler', compact([
             'total_layanan',
             'total_item',
@@ -331,8 +443,93 @@ class PelayananController extends Controller
             'jlh_reguler',
             'jlh_kronis',
             'jlh_kemo',
-            'jlh_hibah'
+            'jlh_hibah',
+            'grandtotal'
         ]));
+        // $arrayindex_reguler = [];
+        // $arrayindex_kronis = [];
+        // $arrayindex_kemo = [];
+        // $arrayindex_hibah = [];
+        // //normalisasi array dan pemisahan jenis jenis resep
+        // $total_layanan = 0;
+        // foreach ($data_obat as $nama) {
+        //     $index = $nama['name'];
+        //     $value = $nama['value'];
+        //     $dataSet[$index] = $value;
+        //     if ($index == 'sub_total_order') {
+        //         $arrayindex_far[] = $dataSet;
+        //     }
+        // }
+        // dd($arrayindex_far);
+        // $jenisracik = $request->jenisracik;
+        // $jenis_resep = $request->status;
+        // $total_layanan = $request->gt_lama_2 - $request->total_layanan_1;
+        // $total_item = $request->gt_total_item_2 - 1;
+        // $resep_kronis = $request->resep_kronis_2;
+        // $resep_hibah = $request->resep_hibah_2;
+        // $resep_reguler = $request->resep_reguler_2;
+        // $resep_kemo = $request->resep_kemo_2;
+        // $jlh_reguler = $resep_reguler;
+        // $jlh_kronis = $resep_kronis;
+        // $jlh_hibah = $resep_hibah;
+        // $jlh_kemo = $resep_kemo;
+        // if ($jenis_resep == 80) {
+        //     $resep_reguler = $resep_reguler - 1;
+        //     $jlh_reguler = $resep_reguler;
+        // }
+        // if ($jenis_resep == 81) {
+        //     $resep_kronis = $resep_kronis - 1;
+        //     $jlh_kronis = $resep_kronis;
+        // }
+        // if ($jenis_resep == 82) {
+        //     $resep_kemo = $resep_kemo - 1;
+        //     $jlh_kemo = $resep_kemo;
+        // }
+        // if ($jenis_resep == 83) {
+        //     $resep_hibah = $resep_hibah - 1;
+        //     $jlh_hibah = $resep_hibah;
+        // }
+
+        // if ($resep_reguler > 0) {
+        //     $reguler = 1;
+        // } else {
+        //     $reguler = 0;
+        // }
+        // if ($resep_kronis > 0) {
+        //     $kronis = 1;
+        // } else {
+        //     $kronis = 0;
+        // }
+        // if ($resep_kemo > 0) {
+        //     $kemo = 1;
+        // } else {
+        //     $kemo = 0;
+        // }
+        // if ($resep_hibah > 0) {
+        //     $hibah = 1;
+        // } else {
+        //     $hibah = 0;
+        // }
+        // $total_resep = $reguler + $kronis + $kemo + $hibah;
+        // $jasa_baca = $total_item * 1200;
+        // $jasa_embalase = $total_item * 500;
+        // $jasa_resep = 1000 * $total_resep;
+        // return view('Layanan.form_gt_obat_reguler', compact([
+        //     'total_layanan',
+        //     'total_item',
+        //     'jasa_baca',
+        //     'jasa_embalase',
+        //     'total_resep',
+        //     'jasa_resep',
+        //     'reguler',
+        //     'kronis',
+        //     'kemo',
+        //     'hibah',
+        //     'jlh_reguler',
+        //     'jlh_kronis',
+        //     'jlh_kemo',
+        //     'jlh_hibah'
+        // ]));
     }
     public function simpanorderan_far_reguler(Request $request)
     {
@@ -364,7 +561,7 @@ class PelayananController extends Controller
         //cek stok obat 1
         foreach ($arrayindex_far as $a) {
             if ($a['status_order_3'] == 'NON-RACIKAN') {
-                $cek_stok = db::select('SELECT * FROM ti_kartu_stok WHERE NO = ( SELECT MAX(a.no ) AS nomor FROM ti_kartu_stok a WHERE kode_barang = ? AND kode_unit = ? )', ([$a['kode_barang_order'], '4008']));
+                $cek_stok = db::select('SELECT * FROM ti_kartu_stok WHERE NO = ( SELECT MAX(a.no ) AS nomor FROM ti_kartu_stok a WHERE kode_barang = ? AND kode_unit = ? )', ([$a['kode_barang_order'], $this->get_unit_login()]));
                 $stok_current = $cek_stok[0]->stok_current - $a['qty_order'];
                 if ($stok_current < 0) {
                     $data = [
@@ -378,7 +575,7 @@ class PelayananController extends Controller
                 $cek_order = db::connection('mysql2')->select('SELECT a.id,b.`kode_barang`,b.`qty_barang`,a.tipe_racik FROM xxxmt_racikan a
                 LEFT OUTER JOIN xxxmt_racikan_detail b ON a.`kode_racik` = b.`kode_racik` WHERE a.id = ? AND b.`satuan_barang` <> ?', [$a['id_racik'], '-']);
                 foreach ($cek_order as $co) {
-                    $cek_stok = db::select('SELECT * FROM ti_kartu_stok WHERE NO = ( SELECT MAX(a.no ) AS nomor FROM ti_kartu_stok a WHERE kode_barang = ? AND kode_unit = ? )', ([$co->kode_barang, '4008']));
+                    $cek_stok = db::select('SELECT * FROM ti_kartu_stok WHERE NO = ( SELECT MAX(a.no ) AS nomor FROM ti_kartu_stok a WHERE kode_barang = ? AND kode_unit = ? )', ([$co->kode_barang, $this->get_unit_login()]));
                     if ($co->tipe_racik == 'NS') {
                         $stok_current = $cek_stok[0]->stok_current - $co->qty_barang;
                     } else {
@@ -401,7 +598,7 @@ class PelayananController extends Controller
         $cek_kemo = count($arrayindex_kemo);
         $cek_hib = count($arrayindex_hibah);
         $data_kunjungan = DB::select('select *,fc_nama_px(no_rm) AS nama_pasien,fc_alamat(no_rm) AS alamat_pasien from ts_kunjungan where kode_kunjungan = ?', [$request->kodekunjungan]);
-        $kodeunit = '4008';
+        $kodeunit = $this->get_unit_login();
         $unit = DB::select('select * from mt_unit where kode_unit = ?', [$kodeunit]);
         if ($data_kunjungan[0]->kode_penjamin != 'P01') {
             $kategori_resep = 'Resep Kredit';
@@ -418,7 +615,7 @@ class PelayananController extends Controller
             //cek stok obat 2
             foreach ($arrayindex_reguler as $a) {
                 if ($a['status_order_3'] == 'NON-RACIKAN') {
-                    $cek_stok = db::select('SELECT * FROM ti_kartu_stok WHERE NO = ( SELECT MAX(a.no ) AS nomor FROM ti_kartu_stok a WHERE kode_barang = ? AND kode_unit = ? )', ([$a['kode_barang_order'], '4008']));
+                    $cek_stok = db::select('SELECT * FROM ti_kartu_stok WHERE NO = ( SELECT MAX(a.no ) AS nomor FROM ti_kartu_stok a WHERE kode_barang = ? AND kode_unit = ? )', ([$a['kode_barang_order'], $this->get_unit_login()]));
                     $stok_current = $cek_stok[0]->stok_current - $a['qty_order'];
                     if ($stok_current < 0) {
                         $data = [
@@ -432,7 +629,7 @@ class PelayananController extends Controller
                     $cek_order = db::connection('mysql2')->select('SELECT a.id,b.`kode_barang`,b.`qty_barang`,a.tipe_racik FROM xxxmt_racikan a
                     LEFT OUTER JOIN xxxmt_racikan_detail b ON a.`kode_racik` = b.`kode_racik` WHERE a.id = ? AND b.`satuan_barang` <> ?', [$a['id_racik'], '-']);
                     foreach ($cek_order as $co) {
-                        $cek_stok = db::select('SELECT * FROM ti_kartu_stok WHERE NO = ( SELECT MAX(a.no ) AS nomor FROM ti_kartu_stok a WHERE kode_barang = ? AND kode_unit = ? )', ([$co->kode_barang, '4008']));
+                        $cek_stok = db::select('SELECT * FROM ti_kartu_stok WHERE NO = ( SELECT MAX(a.no ) AS nomor FROM ti_kartu_stok a WHERE kode_barang = ? AND kode_unit = ? )', ([$co->kode_barang, $this->get_unit_login()]));
                         if ($co->tipe_racik == 'NS') {
                             $stok_current = $cek_stok[0]->stok_current - $co->qty_barang;
                         } else {
@@ -450,7 +647,8 @@ class PelayananController extends Controller
                 }
             }
             //end of cek stok obat
-            $r = DB::connection('mysql2')->select("CALL GET_NOMOR_LAYANAN_HEADER('4008')");
+            $unitlog = $this->get_unit_login();
+            $r = DB::connection('mysql2')->select("CALL GET_NOMOR_LAYANAN_HEADER($unitlog)");
             $kode_layanan_header = $r[0]->no_trx_layanan;
             if (strlen($kode_layanan_header) < 5) {
                 $year = date('y');
@@ -463,9 +661,9 @@ class PelayananController extends Controller
                     'kode_layanan_header' => $kode_layanan_header,
                     'tgl_entry' => $this->get_now(),
                     'kode_kunjungan' => $request->kodekunjungan,
-                    'kode_unit' => '4008',
+                    'kode_unit' => $this->get_unit_login(),
                     'kode_tipe_transaksi' => '2',
-                    'pic' => '1',
+                    'pic' => auth()->user()->id_simrs,
                     'status_layanan' => '8',
                     'keterangan' => 'FARMASI BARU',
                     'status_retur' => 'OPN',
@@ -499,7 +697,7 @@ class PelayananController extends Controller
                 } else {
                     $cek_order = db::connection('mysql2')->select('SELECT a.id,b.`kode_barang`,b.`qty_barang` FROM xxxmt_racikan a
                     LEFT OUTER JOIN xxxmt_racikan_detail b ON a.`kode_racik` = b.`kode_racik` WHERE a.id = ? AND b.`satuan_barang` <> ?', [$a['id_racik'], '-']);
-                    $cek_stok = db::select('SELECT * FROM ti_kartu_stok WHERE NO = ( SELECT MAX(a.no ) AS nomor FROM ti_kartu_stok a WHERE kode_barang = ? AND kode_unit = ? )', ([$cek_order[0]->kode_barang, '4008']));
+                    $cek_stok = db::select('SELECT * FROM ti_kartu_stok WHERE NO = ( SELECT MAX(a.no ) AS nomor FROM ti_kartu_stok a WHERE kode_barang = ? AND kode_unit = ? )', ([$cek_order[0]->kode_barang, $this->get_unit_login()]));
                     $mt_barang = DB::select('select * from mt_barang where kode_barang = ?', [$cek_order[0]->kode_barang]);
                     $total = $a['sub_total_order_2'];
                     $diskon = $a['disc_order'];
@@ -517,7 +715,7 @@ class PelayananController extends Controller
                 // dd($grandtotal);
                 try {
                     if ($a['status_order_3'] == 'NON-RACIKAN') {
-                        $cek_stok = db::select('SELECT * FROM ti_kartu_stok WHERE NO = ( SELECT MAX(a.no ) AS nomor FROM ti_kartu_stok a WHERE kode_barang = ? AND kode_unit = ? )', ([$a['kode_barang_order'], '4008']));
+                        $cek_stok = db::select('SELECT * FROM ti_kartu_stok WHERE NO = ( SELECT MAX(a.no ) AS nomor FROM ti_kartu_stok a WHERE kode_barang = ? AND kode_unit = ? )', ([$a['kode_barang_order'], $this->get_unit_login()]));
                         $stok_current = $cek_stok[0]->stok_current - $a['qty_order'];
                         $mt_barang = DB::select('select * from mt_barang where kode_barang = ?', [$a['kode_barang_order']]);
                         $ts_layanan_detail = [
@@ -545,7 +743,7 @@ class PelayananController extends Controller
                             'no_dokumen' => $kode_layanan_header,
                             'no_dokumen_detail' => $kode_detail_obat,
                             'tgl_stok' => $this->get_now(),
-                            'kode_unit' => '4008',
+                            'kode_unit' => $this->get_unit_login(),
                             'kode_barang' => $a['kode_barang_order'],
                             'stok_last' => $cek_stok[0]->stok_current,
                             'stok_out' => $a['qty_order'],
@@ -635,7 +833,7 @@ class PelayananController extends Controller
                         ];
                         $mt_racikan_header = mt_racikan_header_dummy::create($header_racikan);
                         foreach ($detail_racikan as $dr) {
-                            $cek_stok = db::select('SELECT * FROM ti_kartu_stok WHERE NO = ( SELECT MAX(a.no ) AS nomor FROM ti_kartu_stok a WHERE kode_barang = ? AND kode_unit = ? )', ([$dr->kode_barang, '4008']));
+                            $cek_stok = db::select('SELECT * FROM ti_kartu_stok WHERE NO = ( SELECT MAX(a.no ) AS nomor FROM ti_kartu_stok a WHERE kode_barang = ? AND kode_unit = ? )', ([$dr->kode_barang, $this->get_unit_login()]));
                             if ($detail_racikan[0]->tipe_racik == 'NS') {
                                 $stok_current = $cek_stok[0]->stok_current - $dr->qty_barang;
                                 $stok_out =  $dr->qty_barang;
@@ -659,7 +857,7 @@ class PelayananController extends Controller
                                 'no_dokumen' => $kode_layanan_header,
                                 'no_dokumen_detail' => $kode_detail_obat,
                                 'tgl_stok' => $this->get_now(),
-                                'kode_unit' => '4008',
+                                'kode_unit' => $this->get_unit_login(),
                                 'kode_barang' => $dr->kode_barang,
                                 'stok_last' => $cek_stok[0]->stok_current,
                                 'stok_out' => $stok_out,
@@ -699,63 +897,6 @@ class PelayananController extends Controller
             // dd('ok');
             //end of insert layanan detail obat reguler
             $get_detail_obat = DB::connection('mysql2')->select('select * from ts_layanan_detail where row_id_header = ? and kode_tarif_detail = ?', [$header->id, '']);
-            // foreach ($get_detail_obat as $do) {
-            //     //cek stok obat reguler
-            //     $cek_stok = db::select('SELECT * FROM ti_kartu_stok WHERE NO = ( SELECT MAX(a.no ) AS nomor FROM ti_kartu_stok a WHERE kode_barang = ? AND kode_unit = ? )', ([$do->kode_barang, '4008']));
-            //     $mt_barang = DB::select('select * from mt_barang where kode_barang = ?', [$do->kode_barang]);
-            //     $stok_current = $cek_stok[0]->stok_current - $do->jumlah_layanan;
-            //     if ($stok_current < 0) {
-            //         $data = [
-            //             'kode' => 500,
-            //             'message' => $a['nama_barang_order'] . ' ' . 'Stok Tidak Mencukupi !',
-            //         ];
-            //         echo json_encode($data);
-            //         die;
-            //     }
-            //     //end of cek stok reguler
-            //     //insert kartu stok
-            //     $data_ti_kartu_stok = [
-            //         'no_dokumen' => $do->kode_layanan_header,
-            //         'no_dokumen_detail' => $do->id_layanan_detail,
-            //         'tgl_stok' => $this->get_now(),
-            //         'kode_unit' => '4008',
-            //         'kode_barang' => $do->kode_barang,
-            //         'stok_last' => $cek_stok[0]->stok_current,
-            //         'stok_out' => $do->jumlah_layanan,
-            //         'stok_current' => $stok_current,
-            //         'harga_beli' => $mt_barang[0]->hna,
-            //         'act' => '1',
-            //         'act_ed' => '1',
-            //         'input_by' => 1,
-            //         'keterangan' => $data_kunjungan[0]->no_rm . '|' . $data_kunjungan[0]->nama_pasien . '|' . $data_kunjungan[0]->alamat_pasien,
-            //     ];
-            //     $insert_ti_kartu_stok = ti_kartu_stok::create($data_ti_kartu_stok);
-            //     //end of kartu stok
-            //     if ($data_kunjungan[0]->kode_penjamin != 'P01') {
-            //         $tagihan_pribadi_js = 0;
-            //         $tagihan_penjamin_js = $jsf[0]->jasa_resep + $jsf[0]->jasa_embalase;
-            //     } else {
-            //         $tagihan_pribadi_js = $jsf[0]->jasa_resep + $jsf[0]->jasa_embalase;
-            //         $tagihan_penjamin_js = 0;
-            //     }
-            //     $ts_layanan_detail2 = [
-            //         'id_layanan_detail' => $this->createLayanandetail(),
-            //         'kode_layanan_header' => $kode_layanan_header,
-            //         'kode_tarif_detail' => 'TX23513',
-            //         'total_tarif' => $jsf[0]->jasa_resep + $jsf[0]->jasa_embalase,
-            //         'jumlah_layanan' => 1,
-            //         'total_layanan' => $jsf[0]->jasa_resep + $jsf[0]->jasa_embalase,
-            //         'grantotal_layanan' => $jsf[0]->jasa_resep + $jsf[0]->jasa_embalase,
-            //         'status_layanan_detail' => 'OPN',
-            //         'tgl_layanan_detail' => $now,
-            //         'tagihan_pribadi' => 0,
-            //         'tagihan_penjamin' => 0,
-            //         'tgl_layanan_detail_2' => $now,
-            //         'row_id_header' => $header->id,
-            //     ];
-            //     $detail2 = ts_layanan_detail_dummy::create($ts_layanan_detail2);
-            // }
-
             if ($data_kunjungan[0]->kode_penjamin != 'P01') {
                 $tagian_penjamin_head = $jsf[0]->jasa_baca;
                 $tagian_pribadi_head = 0;
@@ -799,7 +940,7 @@ class PelayananController extends Controller
         if ($cek_kron > 0) {
             //cek stok obat 2
             foreach ($arrayindex_kronis as $a) {
-                $cek_stok = db::select('SELECT * FROM ti_kartu_stok WHERE NO = ( SELECT MAX(a.no ) AS nomor FROM ti_kartu_stok a WHERE kode_barang = ? AND kode_unit = ? )', ([$a['kode_barang_order'], '4008']));
+                $cek_stok = db::select('SELECT * FROM ti_kartu_stok WHERE NO = ( SELECT MAX(a.no ) AS nomor FROM ti_kartu_stok a WHERE kode_barang = ? AND kode_unit = ? )', ([$a['kode_barang_order'], $this->get_unit_login()]));
                 $stok_current = $cek_stok[0]->stok_current - $a['qty_order'];
                 if ($stok_current < 0) {
                     $data = [
@@ -810,7 +951,8 @@ class PelayananController extends Controller
                 }
             }
             //end of cek stok obat
-            $r = DB::connection('mysql2')->select("CALL GET_NOMOR_LAYANAN_HEADER('4008')");
+            $unitlog = $this->get_unit_login();
+            $r = DB::connection('mysql2')->select("CALL GET_NOMOR_LAYANAN_HEADER($unitlog)");
             $kode_layanan_header = $r[0]->no_trx_layanan;
             if (strlen($kode_layanan_header) < 5) {
                 $year = date('y');
@@ -823,9 +965,9 @@ class PelayananController extends Controller
                     'kode_layanan_header' => $kode_layanan_header,
                     'tgl_entry' => $this->get_now(),
                     'kode_kunjungan' => $request->kodekunjungan,
-                    'kode_unit' => '4008',
+                    'kode_unit' => $this->get_unit_login(),
                     'kode_tipe_transaksi' => '2',
-                    'pic' => '1',
+                    'pic' => auth()->user()->id_simrs,
                     'status_layanan' => '8',
                     'keterangan' => 'FARMASI BARU',
                     'status_retur' => 'OPN',
@@ -897,7 +1039,7 @@ class PelayananController extends Controller
             $get_detail_obat = DB::connection('mysql2')->select('select * from ts_layanan_detail where row_id_header = ? and kode_tarif_detail = ?', [$header->id, '']);
             foreach ($get_detail_obat as $do) {
                 //cek stok obat reguler
-                $cek_stok = db::select('SELECT * FROM ti_kartu_stok WHERE NO = ( SELECT MAX(a.no ) AS nomor FROM ti_kartu_stok a WHERE kode_barang = ? AND kode_unit = ? )', ([$do->kode_barang, '4008']));
+                $cek_stok = db::select('SELECT * FROM ti_kartu_stok WHERE NO = ( SELECT MAX(a.no ) AS nomor FROM ti_kartu_stok a WHERE kode_barang = ? AND kode_unit = ? )', ([$do->kode_barang, $this->get_unit_login()]));
                 $mt_barang = DB::select('select * from mt_barang where kode_barang = ?', [$do->kode_barang]);
                 $stok_current = $cek_stok[0]->stok_current - $do->jumlah_layanan;
                 if ($stok_current < 0) {
@@ -914,7 +1056,7 @@ class PelayananController extends Controller
                     'no_dokumen' => $do->kode_layanan_header,
                     'no_dokumen_detail' => $do->id_layanan_detail,
                     'tgl_stok' => $this->get_now(),
-                    'kode_unit' => '4008',
+                    'kode_unit' => $this->get_unit_login(),
                     'kode_barang' => $do->kode_barang,
                     'stok_last' => $cek_stok[0]->stok_current,
                     'stok_out' => $do->jumlah_layanan,
@@ -996,7 +1138,7 @@ class PelayananController extends Controller
         if ($cek_kemo > 0) {
             //cek stok obat 2
             foreach ($arrayindex_kemo as $a) {
-                $cek_stok = db::select('SELECT * FROM ti_kartu_stok WHERE NO = ( SELECT MAX(a.no ) AS nomor FROM ti_kartu_stok a WHERE kode_barang = ? AND kode_unit = ? )', ([$a['kode_barang_order'], '4008']));
+                $cek_stok = db::select('SELECT * FROM ti_kartu_stok WHERE NO = ( SELECT MAX(a.no ) AS nomor FROM ti_kartu_stok a WHERE kode_barang = ? AND kode_unit = ? )', ([$a['kode_barang_order'], $this->get_unit_login()]));
                 $stok_current = $cek_stok[0]->stok_current - $a['qty_order'];
                 if ($stok_current < 0) {
                     $data = [
@@ -1007,7 +1149,8 @@ class PelayananController extends Controller
                 }
             }
             //end of cek stok obat
-            $r = DB::connection('mysql2')->select("CALL GET_NOMOR_LAYANAN_HEADER('4008')");
+            $unitlog = $this->get_unit_login();
+            $r = DB::connection('mysql2')->select("CALL GET_NOMOR_LAYANAN_HEADER($unitlog)");
             $kode_layanan_header = $r[0]->no_trx_layanan;
             if (strlen($kode_layanan_header) < 5) {
                 $year = date('y');
@@ -1020,9 +1163,9 @@ class PelayananController extends Controller
                     'kode_layanan_header' => $kode_layanan_header,
                     'tgl_entry' => $this->get_now(),
                     'kode_kunjungan' => $request->kodekunjungan,
-                    'kode_unit' => '4008',
+                    'kode_unit' => $this->get_unit_login(),
                     'kode_tipe_transaksi' => '2',
-                    'pic' => '1',
+                    'pic' => auth()->user()->id_simrs,
                     'status_layanan' => '8',
                     'keterangan' => 'FARMASI BARU',
                     'status_retur' => 'OPN',
@@ -1094,7 +1237,7 @@ class PelayananController extends Controller
             $get_detail_obat = DB::connection('mysql2')->select('select * from ts_layanan_detail where row_id_header = ? and kode_tarif_detail = ?', [$header->id, '']);
             foreach ($get_detail_obat as $do) {
                 //cek stok obat reguler
-                $cek_stok = db::select('SELECT * FROM ti_kartu_stok WHERE NO = ( SELECT MAX(a.no ) AS nomor FROM ti_kartu_stok a WHERE kode_barang = ? AND kode_unit = ? )', ([$do->kode_barang, '4008']));
+                $cek_stok = db::select('SELECT * FROM ti_kartu_stok WHERE NO = ( SELECT MAX(a.no ) AS nomor FROM ti_kartu_stok a WHERE kode_barang = ? AND kode_unit = ? )', ([$do->kode_barang, $this->get_unit_login()]));
                 $mt_barang = DB::select('select * from mt_barang where kode_barang = ?', [$do->kode_barang]);
                 $stok_current = $cek_stok[0]->stok_current - $do->jumlah_layanan;
                 if ($stok_current < 0) {
@@ -1111,7 +1254,7 @@ class PelayananController extends Controller
                     'no_dokumen' => $do->kode_layanan_header,
                     'no_dokumen_detail' => $do->id_layanan_detail,
                     'tgl_stok' => $this->get_now(),
-                    'kode_unit' => '4008',
+                    'kode_unit' => $this->get_unit_login(),
                     'kode_barang' => $do->kode_barang,
                     'stok_last' => $cek_stok[0]->stok_current,
                     'stok_out' => $do->jumlah_layanan,
@@ -1193,7 +1336,7 @@ class PelayananController extends Controller
         if ($cek_hib > 0) {
             //cek stok obat 2
             foreach ($arrayindex_hibah as $a) {
-                $cek_stok = db::select('SELECT * FROM ti_kartu_stok WHERE NO = ( SELECT MAX(a.no ) AS nomor FROM ti_kartu_stok a WHERE kode_barang = ? AND kode_unit = ? )', ([$a['kode_barang_order'], '4008']));
+                $cek_stok = db::select('SELECT * FROM ti_kartu_stok WHERE NO = ( SELECT MAX(a.no ) AS nomor FROM ti_kartu_stok a WHERE kode_barang = ? AND kode_unit = ? )', ([$a['kode_barang_order'], $this->get_unit_login()]));
                 $stok_current = $cek_stok[0]->stok_current - $a['qty_order'];
                 if ($stok_current < 0) {
                     $data = [
@@ -1204,7 +1347,8 @@ class PelayananController extends Controller
                 }
             }
             //end of cek stok obat
-            $r = DB::connection('mysql2')->select("CALL GET_NOMOR_LAYANAN_HEADER('4008')");
+            $unitlog = $this->get_unit_login();
+            $r = DB::connection('mysql2')->select("CALL GET_NOMOR_LAYANAN_HEADER($unitlog)");
             $kode_layanan_header = $r[0]->no_trx_layanan;
             if (strlen($kode_layanan_header) < 5) {
                 $year = date('y');
@@ -1217,9 +1361,9 @@ class PelayananController extends Controller
                     'kode_layanan_header' => $kode_layanan_header,
                     'tgl_entry' => $this->get_now(),
                     'kode_kunjungan' => $request->kodekunjungan,
-                    'kode_unit' => '4008',
+                    'kode_unit' => $this->get_unit_login(),
                     'kode_tipe_transaksi' => '2',
-                    'pic' => '1',
+                    'pic' => auth()->user()->id_simrs,
                     'status_layanan' => '8',
                     'keterangan' => 'FARMASI BARU',
                     'status_retur' => 'OPN',
@@ -1249,9 +1393,9 @@ class PelayananController extends Controller
                 $grandtotal = $total - $hitung + 0 + 0;
                 if ($data_kunjungan[0]->kode_penjamin != 'P01') {
                     $tagihan_pribadi = 0;
-                    $tagihan_penjamin = $grandtotal;
+                    $tagihan_penjamin = 0;
                 } else {
-                    $tagihan_pribadi = $grandtotal;
+                    $tagihan_pribadi = 0;
                     $tagihan_penjamin = 0;
                 }
                 $kode_detail_obat = $this->createLayanandetail();
@@ -1260,11 +1404,11 @@ class PelayananController extends Controller
                         'id_layanan_detail' => $kode_detail_obat,
                         'kode_layanan_header' => $kode_layanan_header,
                         'kode_tarif_detail' => '',
-                        'total_tarif' => $a['harga2_order'],
+                        'total_tarif' => 0,
                         'jumlah_layanan' => $a['qty_order'],
                         'total_layanan' => $total,
                         'diskon_layanan' => $a['disc_order'],
-                        'grantotal_layanan' => $grandtotal,
+                        'grantotal_layanan' => 0,
                         'status_layanan_detail' => 'OPN',
                         'tgl_layanan_detail' => $now,
                         'kode_barang' => $a['kode_barang_order'],
@@ -1272,8 +1416,8 @@ class PelayananController extends Controller
                         'kategori_resep' => $kategori_resep,
                         'satuan_barang' => $mt_barang[0]->satuan,
                         'tipe_anestesi' => $a['status_order_2'],
-                        'tagihan_pribadi' => $tagihan_pribadi,
-                        'tagihan_penjamin' => $tagihan_penjamin,
+                        'tagihan_pribadi' => 0,
+                        'tagihan_penjamin' => 0,
                         'tgl_layanan_detail_2' => $now,
                         'row_id_header' => $header->id,
                     ];
@@ -1291,7 +1435,7 @@ class PelayananController extends Controller
             $get_detail_obat = DB::connection('mysql2')->select('select * from ts_layanan_detail where row_id_header = ? and kode_tarif_detail = ?', [$header->id, '']);
             foreach ($get_detail_obat as $do) {
                 //cek stok obat reguler
-                $cek_stok = db::select('SELECT * FROM ti_kartu_stok WHERE NO = ( SELECT MAX(a.no ) AS nomor FROM ti_kartu_stok a WHERE kode_barang = ? AND kode_unit = ? )', ([$do->kode_barang, '4008']));
+                $cek_stok = db::select('SELECT * FROM ti_kartu_stok WHERE NO = ( SELECT MAX(a.no ) AS nomor FROM ti_kartu_stok a WHERE kode_barang = ? AND kode_unit = ? )', ([$do->kode_barang, $this->get_unit_login()]));
                 $mt_barang = DB::select('select * from mt_barang where kode_barang = ?', [$do->kode_barang]);
                 $stok_current = $cek_stok[0]->stok_current - $do->jumlah_layanan;
                 if ($stok_current < 0) {
@@ -1308,7 +1452,7 @@ class PelayananController extends Controller
                     'no_dokumen' => $do->kode_layanan_header,
                     'no_dokumen_detail' => $do->id_layanan_detail,
                     'tgl_stok' => $this->get_now(),
-                    'kode_unit' => '4008',
+                    'kode_unit' => $this->get_unit_login(),
                     'kode_barang' => $do->kode_barang,
                     'stok_last' => $cek_stok[0]->stok_current,
                     'stok_out' => $do->jumlah_layanan,
@@ -1369,13 +1513,13 @@ class PelayananController extends Controller
             ];
             $detail3 = ts_layanan_detail_dummy::create($ts_layanan_detail3);
             //update layanan header
-            $totalheader = $totalheader + 0;
+            $totalheader =  0;
             if ($data_kunjungan[0]->kode_penjamin != 'P01') {
-                $tagihan_penjamin_header = $totalheader;
+                $tagihan_penjamin_header = 0;
                 $tagihan_pribadi_header = '0';
             } else {
                 $tagihan_penjamin_header = '0';
-                $tagihan_pribadi_header = $totalheader;
+                $tagihan_pribadi_header = 0;
             }
             ts_layanan_header_dummy::where('id', $header->id)
                 ->update(['status_layanan' => $status_layanan, 'kode_tipe_transaksi' => $kode_tipe_transaki, 'total_layanan' => $totalheader, 'tagihan_penjamin' => $tagihan_penjamin_header, 'tagihan_pribadi' => $tagihan_pribadi_header]);
@@ -1395,14 +1539,14 @@ class PelayananController extends Controller
         $jsf = DB::select('select * from mt_jasa_farmasi');
         $data_obat = json_decode($_POST['data1'], true);
         $data_kunjungan = DB::select('select *,fc_nama_px(no_rm) AS nama_pasien,fc_alamat(no_rm) AS alamat_pasien from ts_kunjungan where kode_kunjungan = ?', [$request->kodekunjungan]);
-        $kodeunit = '4008';
+        $kodeunit = $this->get_unit_login();
         $data_header = [
             'kode_layanan_header' => '',
             'tgl_entry' => $this->get_now(),
             'kode_kunjungan' => $request->kodekunjungan,
-            'kode_unit' => '4008',
+            'kode_unit' => $this->get_unit_login(),
             'kode_tipe_transaksi' => '2',
-            'pic' => '1',
+            'pic' => auth()->user()->id_simrs,
             'status_layanan' => '8',
             'keterangan' => 'FARMASI BARU',
             'status_retur' => 'OPN',
@@ -1447,7 +1591,7 @@ class PelayananController extends Controller
     {
         $kodekunjungan = $request->kode;
         $header = DB::connection('mysql2')->select('select * from ts_layanan_header where kode_kunjungan = ? AND status_layanan < ?', [$kodekunjungan, 3]);
-        $detail = DB::connection('mysql2')->select('SELECT d.nama_racik,b.id,row_id_header,kode_barang,fc_nama_barang(kode_barang) AS nama_barang,aturan_pakai,jumlah_layanan,jumlah_retur,grantotal_layanan,a.`total_layanan`,c.nama_anestesi,d.tipe_racik,b.status_layanan_detail FROM ts_layanan_header a
+        $detail = DB::connection('mysql2')->select('SELECT a.id as id_header,a.kode_layanan_header,d.nama_racik,b.id,row_id_header,kode_barang,fc_nama_barang(kode_barang) AS nama_barang,aturan_pakai,jumlah_layanan,jumlah_retur,grantotal_layanan,a.`total_layanan`,c.nama_anestesi,d.tipe_racik,b.status_layanan_detail FROM ts_layanan_header a
         LEFT OUTER JOIN ts_layanan_detail b ON a.`id` = b.`row_id_header`
         LEFT OUTER JOIN mt_anestesi_tipe c on b.tipe_anestesi = c.id
         LEFT OUTER JOIN mt_racikan d on b.kode_barang = d.kode_racik
@@ -1465,12 +1609,30 @@ class PelayananController extends Controller
         $d = $request->harga_obat;
         $e = $request->tiperacikan;
         $f = $request->kemasan;
+        if ($c == 0) {
+            $data = [
+                'kode' => 500,
+                'message' => 'Dosis Awal Tidak Boleh Kosong !'
+            ];
+            echo json_encode($data);
+            die;
+        }
+        $kode_barang = $request->kode_barang;
+        $get_master_barang = DB::select('SELECT * from mt_barang where kode_barang = ?', [$kode_barang]);
         //         v_subtot
         // subtotalracik_2
         if ($f == 3) {
-            $subtot = $d;
-            $v_subtot = 'IDR ' . number_format($d, 2);
-            $qtytotal = 1;
+            $kat11 = $get_master_barang[0]->kat11;
+            if ($kat11 == 1) {
+                // $harga_satuan_kecil = $d / $c;
+                $qtytotal = $a * $b / $c;
+                $subtot = $d * $qtytotal;
+                $v_subtot = 'IDR ' . number_format($subtot, 2);
+            } else {
+                $subtot = $d;
+                $v_subtot = 'IDR ' . number_format($d, 2);
+                $qtytotal = 1;
+            }
         } else {
             $harga_satuan_kecil = $d / $c;
             $qtytotal = $a * $b / $c;
@@ -1535,7 +1697,7 @@ class PelayananController extends Controller
             $kd = "000001";
         }
         date_default_timezone_set('Asia/Jakarta');
-        return 'RET'.'DP2' . date('ymd') . $kd;
+        return 'RET' . 'DP2' . date('ymd') . $kd;
     }
     public function get_kode_retur_detail()
     {
@@ -1553,7 +1715,7 @@ class PelayananController extends Controller
             $kd = "000001";
         }
         date_default_timezone_set('Asia/Jakarta');
-        return 'RETDET'. date('ymd') . $kd;
+        return 'RETDET' . date('ymd') . $kd;
     }
     public function get_kode_racik()
     {
@@ -1842,8 +2004,8 @@ class PelayananController extends Controller
             die;
         }
         $cek_resep = DB::connection('mysql2')->select('SELECT b.`kode_racik` FROM ts_layanan_detail a
-        LEFT OUTER JOIN mt_racikan b ON a.kode_barang = b.kode_racik where a.id = ?',[$id_detail]);
-        if($cek_resep[0]->kode_racik != ''){
+        LEFT OUTER JOIN mt_racikan b ON a.kode_barang = b.kode_racik where a.id = ?', [$id_detail]);
+        if ($cek_resep[0]->kode_racik != '') {
             $data = [
                 'kode' => 500,
                 'message' => 'Racikan tidak bisa diretur !',
@@ -1919,7 +2081,7 @@ class PelayananController extends Controller
             'total_retur' => $total_retur,
             'alasan_retur' => 'RETUR',
             'status_retur' => 'CLS',
-            'pic' => '1',
+            'pic' => auth()->user()->id_simrs,
             'status_pembayaran' => 'CLS',
         ];
         $rh = ts_retur_header_dummy::create($ts_retur_header);
@@ -1927,7 +2089,7 @@ class PelayananController extends Controller
         $tgl_Ret = $this->get_now();
         $KODE_DET_RET = $this->get_kode_retur_detail();
         $ts_retur_detail_1 = [
-            'kode_retur_detail' => $KODE_DET_RET ,
+            'kode_retur_detail' => $KODE_DET_RET,
             'tgl_retur_detail' => $tgl_Ret,
             'kode_retur_header' => $kode_retur_header,
             'id_layanan_detail' => '',
@@ -1943,7 +2105,7 @@ class PelayananController extends Controller
         $ts_retur_detail_2 = [
             'kode_retur_detail' => $this->get_kode_retur_detail(),
             'tgl_retur_detail' => $tgl_Ret,
-            'kode_retur_header' => $kode_retur_header ,
+            'kode_retur_header' => $kode_retur_header,
             'id_layanan_detail' => '',
             'qty_awal' => 1,
             'qty_retur' => '1',
@@ -1958,7 +2120,7 @@ class PelayananController extends Controller
             $ts_retur_detail_3 = [
                 'kode_retur_detail' =>  $this->get_kode_retur_detail(),
                 'tgl_retur_detail' => $tgl_Ret,
-                'kode_retur_header' =>$kode_retur_header ,
+                'kode_retur_header' => $kode_retur_header,
                 'id_layanan_detail' => '',
                 'qty_awal' => 1,
                 'qty_retur' => '1',
@@ -1968,7 +2130,7 @@ class PelayananController extends Controller
                 'status_retur_detail' => 'CLS',
                 'row_id_header' => $row_id_h_ret,
             ];
-        ts_retur_detail_dummy::create($ts_retur_detail_3);
+            ts_retur_detail_dummy::create($ts_retur_detail_3);
         }
         $update_header = [
             'status_layanan' => $status_layanan_header,
@@ -1990,8 +2152,8 @@ class PelayananController extends Controller
             'no_dokumen' => $kode_retur_header,
             'no_dokumen_detail' => $KODE_DET_RET,
             'tgl_stok' => $this->get_now(),
-            'kode_unit' => '4008',
-            'kode_barang' => $KODEBARANG ,
+            'kode_unit' => $this->get_unit_login(),
+            'kode_barang' => $KODEBARANG,
             'stok_last' => $stok_last,
             'stok_in' => $stok_in,
             'stok_current' => $stok_current,
@@ -2010,7 +2172,7 @@ class PelayananController extends Controller
     {
         $get_header = DB::connection('mysql2')->select('select *,fc_NAMA_USER(pic) as nama_user from ts_layanan_header where id = ?', [$id]);
         $dtpx = DB::select('SELECT counter,no_rm,fc_nama_px(no_rm) AS nama, fc_umur(no_rm) AS umur,DATE(fc_tgl_lahir(no_rm)) AS tgl_lahir,fc_alamat(no_rm) AS alamat,fc_NAMA_PENJAMIN2(kode_penjamin) as nama_penjamin,fc_nama_unit1(kode_unit) as unit,fc_nama_paramedis(kode_paramedis) as dokter,kode_penjamin FROM ts_kunjungan WHERE kode_kunjungan = ?', [$get_header[0]->kode_kunjungan]);
-        $get_detail = DB::connection('mysql4')->select('SELECT a.kode_tarif_detail,a.kode_barang,b.`nama_barang`,a.jumlah_layanan,a.jumlah_retur,a.tagihan_pribadi,a.tagihan_penjamin FROM ts_layanan_detail a
+        $get_detail = DB::connection('mysql2')->select('SELECT a.kode_tarif_detail,a.kode_barang,b.`nama_barang`,a.jumlah_layanan,a.jumlah_retur,a.tagihan_pribadi,a.tagihan_penjamin FROM ts_layanan_detail a
         LEFT OUTER JOIN mt_barang b ON a.`kode_barang` = b.`kode_barang`
         WHERE a.row_id_header = ?', [$id]);
         if ($dtpx[0]->kode_penjamin == 'P01') {
@@ -2152,5 +2314,65 @@ class PelayananController extends Controller
         $pdf->Output();
         exit;
         // return;
+    }
+    public function CetakEtiket($id)
+    {
+        $get_header = DB::connection('mysql2')->select('select * from ts_layanan_header where id = ?', [$id]);
+        $dtpx = DB::select('SELECT no_rm,fc_nama_px(no_rm) AS nama, fc_umur(no_rm) AS umur,DATE(fc_tgl_lahir(no_rm)) AS tgl_lahir,fc_alamat(no_rm) AS alamat FROM ts_kunjungan WHERE kode_kunjungan = ?', [$get_header[0]->kode_kunjungan]);
+        $get_detail = DB::connection('mysql2')->select('SELECT a.kode_barang,b.`nama_barang`,a.aturan_pakai,a.`ed_obat`,a.jumlah_layanan,a.jumlah_retur FROM ts_layanan_detail a
+        LEFT OUTER JOIN mt_barang b ON a.`kode_barang` = b.`kode_barang`
+        WHERE a.row_id_header = ?', [$id]);
+        // $pdf = new PDF('P', 'in', array('1.97', '2.36'));
+        $pdf = new PDF('P', 'in', array('1.97', '2.36'));
+        $i = $pdf->GetY();
+        // $pdf->AliasNbPages();
+        // $pdf->AddPage();
+        $pdf->SetTitle('Cetak Etiket');
+        $pdf->SetFont('Arial', 'B', 8);
+        foreach ($get_detail as $d) {
+            $total_barang = $d->jumlah_layanan - $d->jumlah_retur;
+            if ($d->kode_barang != '' && $total_barang > 0) {
+                $pdf->SetXY(0, $i);
+                $pdf->Cell(0.1, 10, '' . $i, 0, 1);
+                $pdf->SetFont('Arial', '', 8);
+                $pdf->SetXY(0, 0.4);
+                $pdf->Cell(0.3, 0.10, $dtpx[0]->no_rm, 0, 0);
+                $pdf->SetXY(0.8, 0.4);
+                $pdf->Cell(0.3, 0.10, $dtpx[0]->tgl_lahir . '/ usia ' . $dtpx[0]->umur, 0, 0);
+                $pdf->SetXY(0, 0.6);
+                $pdf->Cell(0.3, 0.10, $dtpx[0]->nama, 0, 0);
+                $pdf->SetFont('Arial', '', 5);
+                $pdf->SetXY(0, 0.8);
+                $pdf->MultiCell(1.9, 0.1, $dtpx[0]->alamat);
+                $y = $pdf->GetY();
+                // $pdf->Cell(0.3, 0.10, $dtpx[0]->alamat, 0, 0);
+                $pdf->SetFont('Arial', 'B', 7);
+                $pdf->SetXY(0, $y + 0.1);
+                $pdf->MultiCell(1.8, 0.10, $d->nama_barang);
+                $y = $pdf->GetY() + 0.007;
+                $pdf->SetXY(0, $y);
+                $pdf->MultiCell(1.9, 0.10, $d->aturan_pakai);
+                // $pdf->Cell(0.3, 0.10, $d->nama_barang, 0, 0);
+                // //A set
+                $code = 'CODE 128';
+                $pdf->Code128(0.1, 1.6, $code, 1.8, 0.4);
+                // // $pdf->Cell(0.3, 0.10, $barcode, 0, 0);
+                $y = $pdf->GetY();
+                $pdf->SetFont('Arial', 'b', 5);
+                $pdf->SetXY(0, $y);
+                $pdf->Cell(0.3, 0.10, $get_header[0]->tgl_entry, 0, 0);
+                $pdf->SetXY(1.2, $y);
+                $pdf->Cell(0.3, 0.10, 'EXP' . $d->ed_obat, 0, 0);
+                $i = 10;
+            }
+        }
+        $pdf->Output();
+        exit;
+        // return;
+    }
+    public function get_unit_login()
+    {
+        $kodeunit = auth()->user()->unit;
+        return $kodeunit;
     }
 }

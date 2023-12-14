@@ -43,7 +43,7 @@
     <div class="col-md-2">
         <div class="form-group">
             <label for="exampleFormControlInput1">Grand total</label>
-            <input type="email" class="form-control" id="gt_total_layanan_reguler" name="gt_total_layanan_reguler" value="IDR {{ number_format($grandtotal,2)}} " placeholder="name@example.com">
+            {{-- <input type="email" class="form-control" id="gt_total_layanan_reguler" name="gt_total_layanan_reguler" value="IDR {{ number_format($grandtotal,2)}} " placeholder="name@example.com"> --}}
           </div>
     </div>
 </div>
