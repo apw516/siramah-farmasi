@@ -12,7 +12,7 @@
             @endforeach
         </select>
     </div>
-    <button onclick="caripasien()" type="button" class="btn btn-primary mb-2">Cari Pasien</button>
+    <button onclick="caripasien()" type="button" class="btn btn-primary mb-2"><i class="bi bi-search"></i> Cari Pasien</button>
 </form>
 <div class="row">
     <div class="col-md-12">

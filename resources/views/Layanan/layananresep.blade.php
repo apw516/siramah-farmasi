@@ -21,9 +21,14 @@
                 <div class="card">
                     <div class="card-header p-2">
                         <ul class="nav nav-pills">
-                            <li class="nav-item"><a class="nav-link active" href="#activity" data-toggle="tab">Data
+                            <li class="nav-item"><a class="nav-link active" href="#activity" data-toggle="tab"><i
+                                        class="bi bi-list-ul"></i> Data
                                     Order</a></li>
-                            <li class="nav-item"><a class="nav-link" href="#timeline" data-toggle="tab">Pencarian Pasien</a>
+                            <li class="nav-item"><a class="nav-link" href="#timeline" data-toggle="tab"><i
+                                        class="bi bi-search"></i> Pencarian Pasien</a>
+                            </li>
+                            <li class="nav-item"><a class="nav-link" href="#riwayat_R" data-toggle="tab"><i
+                                        class="bi bi-clock-history"></i> Riwayat Resep</a>
                             </li>
                         </ul>
                     </div>
@@ -37,6 +42,34 @@
                             <div class="tab-pane" id="timeline">
                                 <div class="v_pencarian_pasien">
 
+                                </div>
+                            </div>
+                            <div class="tab-pane" id="riwayat_R">
+                                <div class="v_riwayat_r">
+                                    <div class="form-row">
+                                        <div class="form-group col-md-4">
+                                            <label for="inputEmail4">Tanggal Awal</label>
+                                            <input type="date" class="form-control" id="tglawal_r_r"
+                                                value="{{ $now }}">
+                                        </div>
+                                        <div class="form-group col-md-4">
+                                            <label for="inputPassword4">Tanggal Akhir</label>
+                                            <input type="date" class="form-control" id="tglakhir_r_r"
+                                                value="{{ $now }}">
+                                        </div>
+                                        <div class="form-group col-md-4">
+                                            <button class="btn btn-primary" style="margin-top:32px"
+                                                onclick="get_riwayat_resep()"><i class="bi bi-search"></i> Cari
+                                                Riwayat</button>
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-md-12">
+                                            <div class="v_t_riwayat_r">
+
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -54,7 +87,29 @@
         $(document).ready(function() {
             get_orderan_poli()
             get_pencarian_pasien()
+            get_riwayat_resep()
         })
+
+        function get_riwayat_resep() {
+            spinner = $('#loader')
+            spinner.show();
+            tglawal = $('#tglawal_r_r').val()
+            tglakhir = $('#tglakhir_r_r').val()
+            $.ajax({
+                type: 'post',
+                data: {
+                    _token: "{{ csrf_token() }}",
+                    tglawal,
+                    tglakhir
+                },
+                url: '<?= route('ambil_riwayat_resep') ?>',
+                success: function(response) {
+                    spinner.hide();
+                    $('.v_t_riwayat_r').html(response);
+                    // $('#daftarpxumum').attr('disabled', true);
+                }
+            });
+        }
 
         function get_orderan_poli() {
             $.ajax({
@@ -69,8 +124,8 @@
                 }
             });
         }
-        function get_pencarian_pasien()
-        {
+
+        function get_pencarian_pasien() {
             $.ajax({
                 type: 'post',
                 data: {

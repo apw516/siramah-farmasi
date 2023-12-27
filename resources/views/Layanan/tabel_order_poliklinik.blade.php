@@ -1,4 +1,4 @@
-<table id="tabelorder" class="table table-sm table-hover">
+<table id="tabelorder" class="table table-sm table-hover text-xs">
     <thead>
         <th>Tgl Order</th>
         <th>Nomor RM</th>

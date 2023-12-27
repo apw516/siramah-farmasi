@@ -23,8 +23,10 @@ class PelayananController extends Controller
     public function IndexLayananResep()
     {
         $menu = 'Layananresep';
+        $now = $this->get_date();
         return view('Layanan.layananresep', compact([
-            'menu'
+            'menu',
+            'now'
         ]));
     }
     public function FormPencarianPasien()
@@ -88,6 +90,39 @@ class PelayananController extends Controller
             'datapasien',
             'datakunjungan',
             'diagnosa'
+        ]));
+    }
+    public function ambil_riwayat_resep(Request $request){
+        $tgl_awal = $request->tglawal;
+        $tgl_akhir = $request->tglakhir;
+        $riwayat = DB::connection('mysql2')->select('SELECT tgl_entry,b.no_rm,fc_nama_px(b.no_rm) AS nama_pasien,fc_alamat(no_rm) AS alamat,a.id AS id_header ,kode_layanan_header,b.kode_kunjungan,unit_pengirim,fc_NAMA_PARAMEDIS1(dok_kirim) AS dokter_pengirim
+        FROM ts_layanan_header a
+        LEFT OUTER JOIN ts_kunjungan b ON a.`kode_kunjungan` = b.`kode_kunjungan`
+        WHERE DATE(tgl_entry) BETWEEN ? AND ? AND a.kode_unit = ?',[$tgl_awal,$tgl_akhir,auth()->user()->unit ]);
+        return view('Layanan.riwayat_resep_farmasi',compact([
+            'riwayat'
+        ]));
+    }
+    public function detail_resep_obat(Request $request){
+        $id = $request->id;
+        $rm = $request->rm;
+        $nama = $request->nama;
+        $alamat = $request->alamat;
+        $dokter = $request->dokter;
+        $unit = $request->unit;
+        $detailresep = DB::connection('mysql2')->SELECT('SELECT fc_nama_barang(a.`kode_barang`) AS nama_barang,c.`kode_racik`,c.`nama_racik`,b.`nama_anestesi`,jumlah_layanan,a.aturan_pakai,kategori_resep,satuan_barang
+        FROM ts_layanan_detail a
+        LEFT OUTER JOIN mt_anestesi_tipe b ON a.`tipe_anestesi` = b.`id`
+        LEFT OUTER JOIN mt_racikan c ON a.`kode_barang` = c.`kode_racik`
+        WHERE row_id_header = ? AND a.`kode_barang` != ?',[$id,'']);
+        return view('Layanan.detail_resep_v',compact([
+            'id',
+            'rm',
+            'nama',
+            'alamat',
+            'dokter',
+            'unit',
+            'detailresep'
         ]));
     }
     public function AmbilDataOrderPoli(Request $request)
@@ -1595,7 +1630,7 @@ class PelayananController extends Controller
         LEFT OUTER JOIN ts_layanan_detail b ON a.`id` = b.`row_id_header`
         LEFT OUTER JOIN mt_anestesi_tipe c on b.tipe_anestesi = c.id
         LEFT OUTER JOIN mt_racikan d on b.kode_barang = d.kode_racik
-        WHERE a.`kode_kunjungan` = ? AND b.`kode_barang` IS NOT NULL AND a.status_layanan < ?', [$kodekunjungan, 3]);
+        WHERE a.`kode_kunjungan` = ? AND b.`kode_barang` != ? AND a.status_layanan < ?', [$kodekunjungan,'',3]);
         return view('Layanan.tabel_riwayat_obat_hari_ini', compact([
             'header',
             'detail'
@@ -2172,7 +2207,7 @@ class PelayananController extends Controller
     {
         $get_header = DB::connection('mysql2')->select('select *,fc_NAMA_USER(pic) as nama_user from ts_layanan_header where id = ?', [$id]);
         $dtpx = DB::select('SELECT counter,no_rm,fc_nama_px(no_rm) AS nama, fc_umur(no_rm) AS umur,DATE(fc_tgl_lahir(no_rm)) AS tgl_lahir,fc_alamat(no_rm) AS alamat,fc_NAMA_PENJAMIN2(kode_penjamin) as nama_penjamin,fc_nama_unit1(kode_unit) as unit,fc_nama_paramedis(kode_paramedis) as dokter,kode_penjamin FROM ts_kunjungan WHERE kode_kunjungan = ?', [$get_header[0]->kode_kunjungan]);
-        $get_detail = DB::connection('mysql2')->select('SELECT a.kode_tarif_detail,a.kode_barang,b.`nama_barang`,a.jumlah_layanan,a.jumlah_retur,a.tagihan_pribadi,a.tagihan_penjamin FROM ts_layanan_detail a
+        $get_detail = DB::sconnection('mysql2')->elect('SELECT a.kode_tarif_detail,a.kode_barang,b.`nama_barang`,a.jumlah_layanan,a.jumlah_retur,a.tagihan_pribadi,a.tagihan_penjamin FROM ts_layanan_detail a
         LEFT OUTER JOIN mt_barang b ON a.`kode_barang` = b.`kode_barang`
         WHERE a.row_id_header = ?', [$id]);
         if ($dtpx[0]->kode_penjamin == 'P01') {

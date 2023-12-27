@@ -38,5 +38,7 @@ Route::post('edit_aturan_pakai', [PelayananController::class, 'edit_aturan_pakai
 Route::post('simpanedit_aturanpakai', [PelayananController::class, 'simpanedit_aturanpakai'])->name('simpanedit_aturanpakai');
 Route::post('retur_obat', [PelayananController::class, 'retur_obat'])->name('retur_obat');
 Route::post('cek_obat_hibah', [PelayananController::class, 'cek_obat_hibah'])->name('cek_obat_hibah');
+Route::post('ambil_riwayat_resep', [PelayananController::class, 'ambil_riwayat_resep'])->name('ambil_riwayat_resep');
+Route::post('detail_resep_obat', [PelayananController::class, 'detail_resep_obat'])->name('detail_resep_obat');
 Route::get('cetaknota/{id}', [PelayananController::class, 'cetaknotafarmasi']); //formpasien_bpjs
 Route::get('cetaketiket/{id}', [PelayananController::class, 'CetakEtiket']); //formpasien_bpjs

@@ -1,4 +1,4 @@
-<table id="tabelpasien" class="table table-sm table-hover">
+<table id="tabelpasien" class="table table-sm table-hover text-xs">
     <thead>
         <th>Tanggal Masuk</th>
         <th>Nomor RM</th>
