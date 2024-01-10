@@ -16,6 +16,7 @@ Route::post('/login', [AuthController::class, 'authenticate']);
 Route::get('/logout', [AuthController::class, 'logout'])->name('logout');
 Route::get('/dashboard', [DashboardController::class, 'Index'])->name('dashboard');
 Route::get('layananresep', [PelayananController::class, 'IndexLayananResep'])->name('layananresep');
+Route::get('kartustok', [PelayananController::class, 'Indexkartustok'])->name('kartustok');
 Route::post('ambil_orderan_poli', [PelayananController::class, 'AmbilOrderanPoli'])->name('ambil_orderan_poli');
 Route::post('ambil_form_pencarian_pasien', [PelayananController::class, 'FormPencarianPasien'])->name('ambil_form_pencarian_pasien');
 Route::post('ambil_data_pencarian_pasien', [PelayananController::class, 'AmbilDataPencarianPasien'])->name('ambil_data_pencarian_pasien');
@@ -42,3 +43,6 @@ Route::post('ambil_riwayat_resep', [PelayananController::class, 'ambil_riwayat_r
 Route::post('detail_resep_obat', [PelayananController::class, 'detail_resep_obat'])->name('detail_resep_obat');
 Route::get('cetaknota/{id}', [PelayananController::class, 'cetaknotafarmasi']); //formpasien_bpjs
 Route::get('cetaketiket/{id}', [PelayananController::class, 'CetakEtiket']); //formpasien_bpjs
+
+Route::post('ambil_master_barang', [PelayananController::class, 'ambil_master_barang'])->name('ambil_master_barang');
+Route::post('ambil_detail_stok', [PelayananController::class, 'ambil_detail_stok'])->name('ambil_detail_stok');

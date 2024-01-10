@@ -29,6 +29,15 @@ class PelayananController extends Controller
             'now'
         ]));
     }
+    public function Indexkartustok()
+    {
+        $menu = 'kartustok';
+        $now = $this->get_date();
+        return view('gudang.index_kartu_stok', compact([
+            'menu',
+            'now'
+        ]));
+    }
     public function FormPencarianPasien()
     {
         $now = $this->get_date();
@@ -80,10 +89,10 @@ class PelayananController extends Controller
         $kodekunjungan = $request->kodekunjungan;
         $datapasien = DB::select('select no_rm,fc_umur(no_rm) as umur,nama_px,fc_alamat(no_rm) as alamatnya,date(tgl_lahir) as tgl_lahir from mt_pasien where no_rm = ?', [$rm]);
         $datakunjungan = DB::select('select *,fc_NAMA_PENJAMIN2(kode_penjamin) as nama_penjamin from ts_kunjungan where kode_kunjungan = ?', [$kodekunjungan]);
-        $assdok = DB::select('select *  from assesmen_dokters where id_kunjungan = ?',[$kodekunjungan]);
-        if(count($assdok) > 0){
+        $assdok = DB::select('select *  from assesmen_dokters where id_kunjungan = ?', [$kodekunjungan]);
+        if (count($assdok) > 0) {
             $diagnosa = $assdok[0]->diagnosakerja;
-        }else{
+        } else {
             $diagnosa = '-';
         }
         return view('Layanan.form_input_resep', compact([
@@ -92,18 +101,20 @@ class PelayananController extends Controller
             'diagnosa'
         ]));
     }
-    public function ambil_riwayat_resep(Request $request){
+    public function ambil_riwayat_resep(Request $request)
+    {
         $tgl_awal = $request->tglawal;
         $tgl_akhir = $request->tglakhir;
         $riwayat = DB::connection('mysql2')->select('SELECT tgl_entry,b.no_rm,fc_nama_px(b.no_rm) AS nama_pasien,fc_alamat(no_rm) AS alamat,a.id AS id_header ,kode_layanan_header,b.kode_kunjungan,unit_pengirim,fc_NAMA_PARAMEDIS1(dok_kirim) AS dokter_pengirim
         FROM ts_layanan_header a
         LEFT OUTER JOIN ts_kunjungan b ON a.`kode_kunjungan` = b.`kode_kunjungan`
-        WHERE DATE(tgl_entry) BETWEEN ? AND ? AND a.kode_unit = ?',[$tgl_awal,$tgl_akhir,auth()->user()->unit ]);
-        return view('Layanan.riwayat_resep_farmasi',compact([
+        WHERE DATE(tgl_entry) BETWEEN ? AND ? AND a.kode_unit = ?', [$tgl_awal, $tgl_akhir, auth()->user()->unit]);
+        return view('Layanan.riwayat_resep_farmasi', compact([
             'riwayat'
         ]));
     }
-    public function detail_resep_obat(Request $request){
+    public function detail_resep_obat(Request $request)
+    {
         $id = $request->id;
         $rm = $request->rm;
         $nama = $request->nama;
@@ -114,8 +125,8 @@ class PelayananController extends Controller
         FROM ts_layanan_detail a
         LEFT OUTER JOIN mt_anestesi_tipe b ON a.`tipe_anestesi` = b.`id`
         LEFT OUTER JOIN mt_racikan c ON a.`kode_barang` = c.`kode_racik`
-        WHERE row_id_header = ? AND a.`kode_barang` != ?',[$id,'']);
-        return view('Layanan.detail_resep_v',compact([
+        WHERE row_id_header = ? AND a.`kode_barang` != ?', [$id, '']);
+        return view('Layanan.detail_resep_v', compact([
             'id',
             'rm',
             'nama',
@@ -187,7 +198,7 @@ class PelayananController extends Controller
             $jasa_1200 = 1200;
             $jasa_500 = 500;
             $cek_barang = DB::select('SELECT * from mt_barang where kode_barang = ?', [$ab['kode_barang_order']]);
-            if(count($cek_barang) > 0){
+            if (count($cek_barang) > 0) {
                 if ($cek_barang[0]->kode_tipe == 3) {
                     $resep_hibah = $resep_hibah + 1;
                 } else {
@@ -201,7 +212,7 @@ class PelayananController extends Controller
                         $resep_reguler = $resep_reguler + 1;
                     }
                 }
-            }else{
+            } else {
                 $resep_reguler = $resep_reguler + 1;
             }
             // if ($ab['status_order_2'] == '80') {
@@ -359,7 +370,7 @@ class PelayananController extends Controller
         $arrayindex_hibah = [];
         //normalisasi array dan pemisahan jenis jenis resep
         $total_layanan = 0;
-        if(count($data_obat)  > 0){
+        if (count($data_obat)  > 0) {
             foreach ($data_obat as $nama) {
                 $index = $nama['name'];
                 $value = $nama['value'];
@@ -1630,7 +1641,7 @@ class PelayananController extends Controller
         LEFT OUTER JOIN ts_layanan_detail b ON a.`id` = b.`row_id_header`
         LEFT OUTER JOIN mt_anestesi_tipe c on b.tipe_anestesi = c.id
         LEFT OUTER JOIN mt_racikan d on b.kode_barang = d.kode_racik
-        WHERE a.`kode_kunjungan` = ? AND b.`kode_barang` != ? AND a.status_layanan < ?', [$kodekunjungan,'',3]);
+        WHERE a.`kode_kunjungan` = ? AND b.`kode_barang` != ? AND a.status_layanan < ?', [$kodekunjungan, '', 3]);
         return view('Layanan.tabel_riwayat_obat_hari_ini', compact([
             'header',
             'detail'
@@ -2207,7 +2218,7 @@ class PelayananController extends Controller
     {
         $get_header = DB::connection('mysql2')->select('select *,fc_NAMA_USER(pic) as nama_user from ts_layanan_header where id = ?', [$id]);
         $dtpx = DB::select('SELECT counter,no_rm,fc_nama_px(no_rm) AS nama, fc_umur(no_rm) AS umur,DATE(fc_tgl_lahir(no_rm)) AS tgl_lahir,fc_alamat(no_rm) AS alamat,fc_NAMA_PENJAMIN2(kode_penjamin) as nama_penjamin,fc_nama_unit1(kode_unit) as unit,fc_nama_paramedis(kode_paramedis) as dokter,kode_penjamin FROM ts_kunjungan WHERE kode_kunjungan = ?', [$get_header[0]->kode_kunjungan]);
-        $get_detail = DB::sconnection('mysql2')->elect('SELECT a.kode_tarif_detail,a.kode_barang,b.`nama_barang`,a.jumlah_layanan,a.jumlah_retur,a.tagihan_pribadi,a.tagihan_penjamin FROM ts_layanan_detail a
+        $get_detail = DB::connection('mysql2')->select('SELECT a.kode_tarif_detail,a.kode_barang,b.`nama_barang`,a.jumlah_layanan,a.jumlah_retur,a.tagihan_pribadi,a.tagihan_penjamin FROM ts_layanan_detail a
         LEFT OUTER JOIN mt_barang b ON a.`kode_barang` = b.`kode_barang`
         WHERE a.row_id_header = ?', [$id]);
         if ($dtpx[0]->kode_penjamin == 'P01') {
@@ -2409,5 +2420,21 @@ class PelayananController extends Controller
     {
         $kodeunit = auth()->user()->unit;
         return $kodeunit;
+    }
+    public function ambil_master_barang()
+    {
+        $mt_barang = DB::select('select * from mt_barang');
+        return view('gudang.tabel_barang', compact([
+            'mt_barang'
+        ]));
+    }
+    public function ambil_detail_stok(Request $request)
+    {
+        $kode_barang = $request->kode_barang;
+        $detail = DB::select('SELECT a.no,tgl_stok,fc_nama_barang(a.`kode_barang`) AS nama_barang,fc_nama_unit1(a.kode_unit) AS nama_unit,keterangan,stok_last,stok_in,stok_out,stok_current
+        FROM ti_kartu_stok a WHERE kode_barang = ? AND kode_unit = ? ORDER BY a.no DESC LIMIT 10', [$kode_barang, auth()->user()->unit]);
+        return view('gudang.tabel_stok', compact([
+            'detail'
+        ]));
     }
 }

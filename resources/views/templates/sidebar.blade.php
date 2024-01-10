@@ -39,6 +39,14 @@
                         </p>
                     </a>
                 </li>
+                <li class="nav-item">
+                    <a href="{{ route('kartustok')}}" class="nav-link @if($menu == 'kartustok') active @endif">
+                        <i class="nav-icon fas fa-archive"></i>
+                        <p>
+                           Kartu Stok
+                        </p>
+                    </a>
+                </li>
                 <li class="nav-header">Akun</li>
                 <li class="nav-item">
                     <a href="" class="nav-link">
