@@ -89,7 +89,6 @@
             get_pencarian_pasien()
             get_riwayat_resep()
         })
-
         function get_riwayat_resep() {
             spinner = $('#loader')
             spinner.show();

@@ -70,7 +70,7 @@
             <div class="tab-content">
                 <div class="active tab-pane" id="activity2">
                     <div class="v_obat_reguler">
-                        <button class="btn btn-warning" data-toggle="modal" data-target="#modalcari_obatreguler"><i
+                        <button class="btn btn-warning" data-toggle="modal" id="tombolobatcarireguler" data-target="#modalcari_obatreguler"><i
                                 class="bi bi-search"></i> Cari Obat Reguler</button>
                         <button class="btn btn-warning" data-toggle="modal" data-target="#modalcari_obatracik"><i
                                 class="bi bi-search"></i> Cari Obat Racik</button>
@@ -153,7 +153,7 @@
                                     </div>
                                     <div class="form-check form-check-inline">
                                         <input class="form-check-input" type="radio" name="inlineRadioOptions"
-                                            id="status" value="82" checked>
+                                            id="status" value="82">
                                         <label class="form-check-label" for="inlineRadio3">KEMOTHERAPI</label>
                                     </div>
                                 </div>
@@ -818,7 +818,7 @@
     }
 
     function simpandraft_racik() {
-        spinner = $('#loader')
+        spinner = $('#loader2')
         spinner.show();
         var max_fields = 10;
         var wrapper = $(".input_obat_racik");
@@ -962,7 +962,7 @@
         var data1 = $('.form_draf_obat_reguler').serializeArray();
         kodekunjungan = $('#kodekunjungan').val()
         rm = $('#rm').val()
-        spinner = $('#loader')
+        spinner = $('#loader2')
         spinner.show();
         $('#btnsimpanorder').attr('disabled', true)
         $.ajax({
