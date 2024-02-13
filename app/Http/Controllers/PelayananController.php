@@ -794,10 +794,11 @@ class PelayananController extends Controller
                             'stok_last' => $cek_stok[0]->stok_current,
                             'stok_out' => $a['qty_order'],
                             'stok_current' => $stok_current,
+                            'stok_global' => '0',
                             'harga_beli' => $mt_barang[0]->hna,
                             'act' => '1',
                             'act_ed' => '1',
-                            'input_by' => '1',
+                            'inputby' => auth()->user()->id,
                             'keterangan' => $data_kunjungan[0]->no_rm . '|' . $data_kunjungan[0]->nama_pasien . '|' . $data_kunjungan[0]->alamat_pasien,
                         ];
                         $insert_ti_kartu_stok = ti_kartu_stok::create($data_ti_kartu_stok);
@@ -907,11 +908,12 @@ class PelayananController extends Controller
                                 'kode_barang' => $dr->kode_barang,
                                 'stok_last' => $cek_stok[0]->stok_current,
                                 'stok_out' => $stok_out,
+                                'stok_global' => '0',
                                 'stok_current' => $stok_current,
                                 'harga_beli' => $mt_barang[0]->hna,
                                 'act' => '1',
                                 'act_ed' => '1',
-                                'input_by' => '1',
+                                'inputby' => auth()->user()->id,
                                 'keterangan' => $data_kunjungan[0]->no_rm . '|' . $data_kunjungan[0]->nama_pasien . '|' . $data_kunjungan[0]->alamat_pasien,
                             ];
                             $insert_ti_kartu_stok = ti_kartu_stok::create($data_ti_kartu_stok);
@@ -1107,10 +1109,11 @@ class PelayananController extends Controller
                     'stok_last' => $cek_stok[0]->stok_current,
                     'stok_out' => $do->jumlah_layanan,
                     'stok_current' => $stok_current,
+                    'stok_global' => '0',
                     'harga_beli' => $mt_barang[0]->hna,
                     'act' => '1',
                     'act_ed' => '1',
-                    'input_by' => 1,
+                    'inputby' => auth()->user()->id,
                     'keterangan' => $data_kunjungan[0]->no_rm . '|' . $data_kunjungan[0]->nama_pasien . '|' . $data_kunjungan[0]->alamat_pasien,
                 ];
                 $insert_ti_kartu_stok = ti_kartu_stok::create($data_ti_kartu_stok);
@@ -1305,10 +1308,11 @@ class PelayananController extends Controller
                     'stok_last' => $cek_stok[0]->stok_current,
                     'stok_out' => $do->jumlah_layanan,
                     'stok_current' => $stok_current,
+                    'stok_global' => '0',
                     'harga_beli' => $mt_barang[0]->hna,
                     'act' => '1',
                     'act_ed' => '1',
-                    'input_by' => 1,
+                    'inputby' => auth()->user()->id,
                     'keterangan' => $data_kunjungan[0]->no_rm . '|' . $data_kunjungan[0]->nama_pasien . '|' . $data_kunjungan[0]->alamat_pasien,
                 ];
                 $insert_ti_kartu_stok = ti_kartu_stok::create($data_ti_kartu_stok);
@@ -1503,10 +1507,11 @@ class PelayananController extends Controller
                     'stok_last' => $cek_stok[0]->stok_current,
                     'stok_out' => $do->jumlah_layanan,
                     'stok_current' => $stok_current,
+                    'stok_global' => '0',
                     'harga_beli' => $mt_barang[0]->hna,
                     'act' => '1',
                     'act_ed' => '1',
-                    'input_by' => 1,
+                    'inputby' => auth()->user()->id,
                     'keterangan' => $data_kunjungan[0]->no_rm . '|' . $data_kunjungan[0]->nama_pasien . '|' . $data_kunjungan[0]->alamat_pasien,
                 ];
                 $insert_ti_kartu_stok = ti_kartu_stok::create($data_ti_kartu_stok);
