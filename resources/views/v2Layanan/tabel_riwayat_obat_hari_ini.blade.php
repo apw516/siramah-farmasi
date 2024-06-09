@@ -53,7 +53,7 @@
                                         </td>
                                         <td>{{ $l->jumlah_layanan }}</td>
                                         <td>{{ $l->aturan_pakai }}</td>
-                                        <td>{{ $l->keterangan }}</td>
+                                        <td>{{ $l->keterangan01 }}</td>
                                         <td class="text-center">
                                             <button class="btn btn-sm btn-info" data-toggle="tooltip"
                                                 data-placement="top" title="Cetak etiket"><i
