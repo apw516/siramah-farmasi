@@ -110,6 +110,7 @@ class V2pelayananController extends Controller
                 }
                 $arrayindex_far[] = $dataSet_order_farmasi;
             }
+
         }
         // dd($arrayindex_far);
         foreach ($arrayindex_far as $a) {
