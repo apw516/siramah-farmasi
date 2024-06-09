@@ -60,6 +60,7 @@ class V2pelayananController extends Controller
         $kodekunjungan = $request->kodekunjungan;
         $idantrian = $request->idantrian;
         $ts_kunjungan = db::select('select no_rm,fc_nama_px(no_rm) as nama_pasien,fc_alamat(no_rm) alamat_pasien,fc_NAMA_PENJAMIN2(kode_penjamin) as nama_penjamin ,fc_nama_unit1(kode_unit) as nama_unit,fc_nama_paramedis1(kode_paramedis) as nama_dokter from ts_kunjungan where kode_kunjungan = ?', [$kodekunjungan]);
+
         $data_resep = DB::connection('mysql2')->select("SELECT
         a.id AS id_header
         ,b.id AS id_detail
@@ -857,11 +858,11 @@ class V2pelayananController extends Controller
     public function riwayat_obat_hari_ini(Request $request)
     {
         $unit = auth()->user()->unit;
-        $get_header = DB::connection('mysql2')->select("select * from ts_layanan_header where kode_kunjungan = ? and kode_unit = ?",[$request->kodekunjungan,$unit]);
+        $get_header = DB::connection('mysql2')->select("select *,fc_nama_unit1(kode_unit) as nama_unit from ts_layanan_header where kode_kunjungan = ? and kode_unit  IN ('4002','4003','4004','4005','4006','4008','4009','4010','4011','4012','4013')",[$request->kodekunjungan]);
         $list = DB::connection('mysql2')->select("SELECT a.kode_layanan_header,a.`kode_kunjungan`,a.id AS id_header
         ,b.id AS id_detail
         ,b.`kode_barang`
-        ,fc_nama_barang(b.`kode_barang`) AS namma_barang
+        ,fc_nama_barang(b.`kode_barang`) AS nama_barang
         ,b.`jumlah_layanan`
         ,b.`aturan_pakai`
         ,b.`tipe_anestesi`
@@ -872,7 +873,8 @@ class V2pelayananController extends Controller
          FROM ts_layanan_header a
         INNER JOIN ts_layanan_detail b ON a.id = b.`row_id_header`
         LEFT OUTER JOIN mt_racikan c on b.kode_barang = c.kode_racik
-        WHERE A.`status_layanan` = '2' AND a.kode_kunjungan = '$request->kodekunjungan' AND b.`status_layanan_detail` = 'OPN' AND kode_unit = '$unit'");
+        WHERE A.`status_layanan` = '2' AND a.kode_kunjungan = '$request->kodekunjungan' AND b.`status_layanan_detail` = 'OPN' AND kode_unit IN ('4002','4003','4004','4005','4006','4008','4009','4010','4011','4012','4013')");
+        // DD($list);
         $kodekunjungan = $request->kodekunjungan;
         // dd($get_header);
         return view('v2Layanan.tabel_riwayat_obat_hari_ini', compact([

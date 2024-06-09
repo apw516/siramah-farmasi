@@ -8,7 +8,7 @@
                 aria-controls="collapseOne{{ $gh->id }}">
                 <div class="row ">
                     <div class="col-md-3">
-                        <p class="text-bold text-dark">{{ $gh->kode_layanan_header }}</p>
+                        <p class="text-bold text-dark">{{ $gh->kode_layanan_header }} | {{ $gh->nama_unit }} | Unit kirim : {{ $gh->unit_pengirim }}</p>
                     </div>
                     <div class="col-md-9">
                         <div class="btn-group float-right" role="group" aria-label="Basic example">
@@ -41,28 +41,30 @@
                         <tbody>
                             @foreach ($list as $l)
                                 @if ($l->kode_layanan_header == $gh->kode_layanan_header)
-                                    <tr>
-                                        <td>{{ $l->namma_barang }} {{ $l->nama_racik }}</td>
-                                        <td>{{ $l->satuan_barang }} {{ $l->kemasan }}</td>
-                                        <td>
-                                            @if ($l->tipe_anestesi == 80)
-                                                Reguler
-                                            @elseif($l->tipe_anestesi == 81)
-                                                Kronis
-                                            @endif
-                                        </td>
-                                        <td>{{ $l->jumlah_layanan }}</td>
-                                        <td>{{ $l->aturan_pakai }}</td>
-                                        <td>{{ $l->keterangan01 }}</td>
-                                        <td class="text-center">
-                                            <button class="btn btn-sm btn-info" data-toggle="tooltip"
-                                                data-placement="top" title="Cetak etiket"><i
-                                                    class="bi bi-printer"></i></button>
-                                            <button class="btn btn-sm btn-danger" data-toggle="tooltip"
-                                                data-placement="top" title="Retur obat"><i
-                                                    class="bi bi-x-circle"></i></button>
-                                        </td>
-                                    </tr>
+                                    @if (strlen($l->nama_barang) > 1 || strlen($l->nama_racik) > 1)
+                                        <tr>
+                                            <td>{{ $l->nama_barang }} {{ $l->nama_racik }}</td>
+                                            <td>{{ $l->satuan_barang }} {{ $l->kemasan }}</td>
+                                            <td>
+                                                @if ($l->tipe_anestesi == 80)
+                                                    Reguler
+                                                @elseif($l->tipe_anestesi == 81)
+                                                    Kronis
+                                                @endif
+                                            </td>
+                                            <td>{{ $l->jumlah_layanan }}</td>
+                                            <td>{{ $l->aturan_pakai }}</td>
+                                            <td>{{ $l->keterangan01 }}</td>
+                                            <td class="text-center">
+                                                <button class="btn btn-sm btn-info" data-toggle="tooltip"
+                                                    data-placement="top" title="Cetak etiket"><i
+                                                        class="bi bi-printer"></i></button>
+                                                <button class="btn btn-sm btn-danger" data-toggle="tooltip"
+                                                    data-placement="top" title="Retur obat"><i
+                                                        class="bi bi-x-circle"></i></button>
+                                            </td>
+                                        </tr>
+                                    @endif
                                 @endif
                             @endforeach
                         </tbody>
