@@ -31,8 +31,16 @@
                     </a>
                 </li>
                 <li class="nav-header">FARMASI</li>
-                <li class="nav-item">
+                {{-- <li class="nav-item">
                     <a href="{{ route('layananresep')}}" class="nav-link @if($menu == 'Layananresep') active @endif">
+                        <i class="nav-icon fas fa-archive"></i>
+                        <p>
+                            Layanan Resep
+                        </p>
+                    </a>
+                </li> --}}
+                <li class="nav-item">
+                    <a href="{{ route('layananresep2')}}" class="nav-link @if($menu == 'Layananresep') active @endif">
                         <i class="nav-icon fas fa-archive"></i>
                         <p>
                             Layanan Resep
