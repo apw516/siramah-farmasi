@@ -13,7 +13,7 @@
                     <div class="col-md-9">
                         <div class="btn-group float-right" role="group" aria-label="Basic example">
                             <button type="button" class="btn btn-primary cetaknotaall"
-                                kodekunjungan="{{ $kodekunjungan }}"><i class="bi bi-printer mr-1"></i>Cetak
+                                kodekunjungan="{{ $kodekunjungan }}" kodeheader="{{ $gh->kode_layanan_header}}"><i class="bi bi-printer mr-1"></i>Cetak
                                 Nota</button>
                             <button type="button" class="btn btn-success cetaketiketall"
                                 kodekunjungan="{{ $kodekunjungan }}" idheader={{ $gh->id }}><i
@@ -86,6 +86,7 @@
     })
     $(".cetaknotaall").on('click', function(event) {
         kodekunjungan = $(this).attr('kodekunjungan')
-        window.open('cetaknotafarmasi_2/' + kodekunjungan);
+        kodeheader = $(this).attr('kodeheader')
+        window.open('cetaknotafarmasi_2/' + kodekunjungan +'/'+ kodeheader);
     })
 </script>

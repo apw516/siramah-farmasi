@@ -1176,9 +1176,7 @@ class V2pelayananController extends Controller
     public function cetaknotafarmasi_2($id)
     {
         $get_header = DB::connection('mysql2')->select('select *,fc_NAMA_USER(pic) as nama_user from ts_layanan_header where kode_kunjungan = ?', [$id]);
-
         $dtpx = DB::select('SELECT counter,no_rm,fc_nama_px(no_rm) AS nama, fc_umur(no_rm) AS umur,DATE(fc_tgl_lahir(no_rm)) AS tgl_lahir,fc_alamat(no_rm) AS alamat,fc_NAMA_PENJAMIN2(kode_penjamin) as nama_penjamin,fc_nama_unit1(kode_unit) as unit,fc_nama_paramedis(kode_paramedis) as dokter,kode_penjamin FROM ts_kunjungan WHERE kode_kunjungan = ?', [$get_header[0]->kode_kunjungan]);
-
         $get_detail = DB::connection('mysql2')->select('SELECT a.kode_tarif_detail,a.kode_barang,b.`nama_barang`,a.jumlah_layanan,a.jumlah_retur,a.tagihan_pribadi,a.tagihan_penjamin,d.nama_racik,a.keterangan FROM ts_layanan_detail a
         LEFT OUTER JOIN mt_barang b ON a.`kode_barang` = b.`kode_barang`
         LEFT OUTER JOIN ts_layanan_header c on a.row_id_header = c.id
@@ -1324,5 +1322,26 @@ class V2pelayananController extends Controller
         $pdf->Output();
         exit;
         // return;
+    }
+    public function cetaknota_new($kodekunjungan,$kodeheader)
+    {
+        // dd($kodeheader);
+        // SP_Karcis_Pendaftaran3(kodelayananheader,norm)
+        // $DH = DB::select('select * from ts_layanan_header where id = ?', [$id]);
+        $DK = DB::select('select * from ts_kunjungan where kode_kunjungan = ?', [$kodekunjungan]);
+        $rm = $DK[0]->no_rm;
+
+        // $KODE_HEADER = $DH[0]->kode_layanan_header;
+        // $ID_HEADER = $DK[0]->counter;
+        $PDO = DB::connection()->getPdo();
+        $QUERY = $PDO->prepare("CALL SP_Karcis_Pendaftaran3('$kodeheader','$rm')");
+        $QUERY->execute();
+        $data = $QUERY->fetchAll();
+        $filename = 'C:\cetakanresep\cetakanresepdp2.jrxml';
+        $config = ['driver' => 'array', 'data' => $data];
+        $report = new PHPJasperXML();
+        $report->load_xml_file($filename)
+            ->setDataSource($config)
+            ->export('Pdf');
     }
 }
