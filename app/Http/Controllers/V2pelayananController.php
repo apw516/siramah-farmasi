@@ -52,7 +52,7 @@ class V2pelayananController extends Controller
         ,date(tgl_masuk) as tgl_masuk
         ,fc_alamat(no_rm) as alamat
         ,fc_nama_px(no_rm) AS nama_pasien
-        ,fc_nama_unit1(kode_unit) AS nama_unit FROM ts_kunjungan WHERE status_kunjungan != ? AND DATE(tgl_masuk) BETWEEN ? AND ? AND kode_unit < ?', [8,$awal,$akhir,'2000']);
+        ,fc_nama_unit1(kode_unit) AS nama_unit FROM ts_kunjungan WHERE status_kunjungan != ? AND DATE(tgl_masuk) BETWEEN ? AND ? AND kode_unit < ?', [8, $awal, $akhir, '2000']);
         return view('v2Layanan.tabel_data_pasien', compact('list'));
     }
     public function ambil_detail_orderan(Request $request)
@@ -110,31 +110,30 @@ class V2pelayananController extends Controller
                 }
                 $arrayindex_far[] = $dataSet_order_farmasi;
             }
-
         }
         // dd($arrayindex_far);
         foreach ($arrayindex_far as $a) {
             if ($a['jenisresep'] == 'reguler') {
                 //cek stok reguler
-                $cek_stok = db::connection('mysql2')->select('SELECT * FROM ti_kartu_stok WHERE NO = ( SELECT MAX(a.no ) AS nomor FROM ti_kartu_stok a WHERE kode_barang = ? AND kode_unit = ? AND sts_stok = ?)', ([$a['kodebarang'], auth()->user()->unit,'1']));
-               if(count($cek_stok) > 0){
-                   $stok_current = $cek_stok[0]->stok_current - $a['jumlah'];
-                   if ($stok_current < 0) {
-                       $data = [
-                           'kode' => 500,
-                           'message' => $a['nama_obat'] . ' ' . 'Stok Tidak Mencukupi !',
-                       ];
-                       echo json_encode($data);
-                       die;
-                   }
-               }else{
-                $data = [
-                    'kode' => 500,
-                    'message' => $a['nama_obat'] . ' ' . 'Stok Tidak Mencukupi !',
-                ];
-                echo json_encode($data);
-                die;
-               }
+                $cek_stok = db::connection('mysql2')->select('SELECT * FROM ti_kartu_stok WHERE NO = ( SELECT MAX(a.no ) AS nomor FROM ti_kartu_stok a WHERE kode_barang = ? AND kode_unit = ? AND sts_stok = ?)', ([$a['kodebarang'], auth()->user()->unit, '1']));
+                if (count($cek_stok) > 0) {
+                    $stok_current = $cek_stok[0]->stok_current - $a['jumlah'];
+                    if ($stok_current < 0) {
+                        $data = [
+                            'kode' => 500,
+                            'message' => $a['nama_obat'] . ' ' . 'Stok Tidak Mencukupi !',
+                        ];
+                        echo json_encode($data);
+                        die;
+                    }
+                } else {
+                    $data = [
+                        'kode' => 500,
+                        'message' => $a['nama_obat'] . ' ' . 'Stok Tidak Mencukupi !',
+                    ];
+                    echo json_encode($data);
+                    die;
+                }
             } else {
                 //cek stok komponen racikan
                 $header_racikan = $a['kodebarang'];
@@ -142,17 +141,26 @@ class V2pelayananController extends Controller
                 INNER JOIN ts_detail_racikan_order b ON a.`id` = b.`id_header`
                 WHERE a.id = ?', [$header_racikan]);
                 foreach ($detail_racikan as $dr) {
-                    $cek_stok = db::connection('mysql2')->select('SELECT * FROM ti_kartu_stok WHERE NO = ( SELECT MAX(a.no ) AS nomor FROM ti_kartu_stok a WHERE kode_barang = ? AND kode_unit = ? and sts_stok = ? )', ([$dr->kode_barang, auth()->user()->unit,'1']));
-                    $stok_current = $cek_stok[0]->stok_current - $dr->qty;
-                    $mt_barang = db::select('select * from mt_barang where kode_barang = ?', [$dr->kode_barang]);
-                    // dd($cek_stok);
-                    if ($stok_current < 0) {
+                    $cek_stok = db::connection('mysql2')->select('SELECT * FROM ti_kartu_stok WHERE NO = ( SELECT MAX(a.no ) AS nomor FROM ti_kartu_stok a WHERE kode_barang = ? AND kode_unit = ? and sts_stok = ? )', ([$dr->kode_barang, auth()->user()->unit, '1']));
+                    if (count($cek_stok) == 0) {
                         $data = [
                             'kode' => 500,
-                            'message' => 'komponen racik ' . $mt_barang[0]->nama_barang . ' Stok Tidak Mencukupi !',
+                            'message' => 'komponen racik Stok Tidak Ada !',
                         ];
                         echo json_encode($data);
                         die;
+                    } else {
+                        $stok_current = $cek_stok[0]->stok_current - $dr->qty;
+                        $mt_barang = db::select('select * from mt_barang where kode_barang = ?', [$dr->kode_barang]);
+                        // dd($cek_stok);
+                        if ($stok_current < 0) {
+                            $data = [
+                                'kode' => 500,
+                                'message' => 'komponen racik ' . $mt_barang[0]->nama_barang . ' Stok Tidak Mencukupi !',
+                            ];
+                            echo json_encode($data);
+                            die;
+                        }
                     }
                 }
             }
@@ -169,7 +177,7 @@ class V2pelayananController extends Controller
             foreach ($arrayindex_far as $a) {
                 if ($a['jenisresep'] == 'reguler') {
                     //cek stok reguler
-                    $cek_stok = db::connection('mysql2')->select('SELECT * FROM ti_kartu_stok WHERE NO = ( SELECT MAX(a.no ) AS nomor FROM ti_kartu_stok a WHERE kode_barang = ? AND kode_unit = ? AND sts_stok = ? )', ([$a['kodebarang'], auth()->user()->unit,'1']));
+                    $cek_stok = db::connection('mysql2')->select('SELECT * FROM ti_kartu_stok WHERE NO = ( SELECT MAX(a.no ) AS nomor FROM ti_kartu_stok a WHERE kode_barang = ? AND kode_unit = ? AND sts_stok = ? )', ([$a['kodebarang'], auth()->user()->unit, '1']));
                     $stok_current = $cek_stok[0]->stok_current - $a['jumlah'];
                     if ($stok_current < 0) {
                         $data = [
@@ -186,7 +194,7 @@ class V2pelayananController extends Controller
                 INNER JOIN ts_detail_racikan_order b ON a.`id` = b.`id_header`
                 WHERE a.id = ?', [$header_racikan]);
                     foreach ($detail_racikan as $dr) {
-                        $cek_stok = db::connection('mysql2')->select('SELECT * FROM ti_kartu_stok WHERE NO = ( SELECT MAX(a.no ) AS nomor FROM ti_kartu_stok a WHERE kode_barang = ? AND kode_unit = ? AND sts_stok = ?)', ([$dr->kode_barang, auth()->user()->unit,'1']));
+                        $cek_stok = db::connection('mysql2')->select('SELECT * FROM ti_kartu_stok WHERE NO = ( SELECT MAX(a.no ) AS nomor FROM ti_kartu_stok a WHERE kode_barang = ? AND kode_unit = ? AND sts_stok = ?)', ([$dr->kode_barang, auth()->user()->unit, '1']));
                         $stok_current = $cek_stok[0]->stok_current - $dr->qty;
                         $mt_barang = db::select('select * from mt_barang where kode_barang = ?', [$dr->kode_barang]);
                         // dd($cek_stok);
@@ -338,9 +346,9 @@ class V2pelayananController extends Controller
                         $savedetail_racikan = mt_racikan_detail_dummy::create($mt_racik_detail);
                     }
                     mt_racikan::whereRaw('id = ?', array($header_r->id))->update(['total_racik' => $totalracik]);
-                    if($kemasan == 'POT_SALEP'){
+                    if ($kemasan == 'POT_SALEP') {
                         $jasa_racik = '10000';
-                    }else{
+                    } else {
                         $jasa_racik = '700' * $jumlah_racikan;
                     }
                     if ($data_kunjungan[0]->kode_penjamin != 'P01') {
@@ -381,7 +389,7 @@ class V2pelayananController extends Controller
                             'kode_dokter1' => $data_kunjungan[0]->kode_paramedis,
                             'keterangan' => $a['keterangan']
                         ];
-                        $grandtotal_racik = $total_racik + $jasa_racik;
+                        $grandtotal_racik = $totalracik + $jasa_racik;
                         $detail = ts_layanan_detail_dummy::create($ts_layanan_detail);
                         ts_layanan_header_order::whereRaw('id = ?', array($a['idheader']))->update(['status_order' => '2', 'status_layanan' => '2']);
                     } catch (\Exception $e) {
@@ -428,9 +436,9 @@ class V2pelayananController extends Controller
                 $kode_barang = $do->kode_barang;
                 $awal = substr($kode_barang, 0, 1);
                 if ($awal == 'R') {
-                    $detail_racikan = db::connection('mysql2')->select('select * from mt_racikan_detail where kode_racik = ?',[$kode_barang]);
-                    foreach($detail_racikan as $dr){
-                        $cek_stok = db::connection('mysql2')->select('SELECT * FROM ti_kartu_stok WHERE NO = ( SELECT MAX(a.no ) AS nomor FROM ti_kartu_stok a WHERE kode_barang = ? AND kode_unit = ? AND sts_stok = ? )', ([$dr->kode_barang, auth()->user()->unit,'1']));
+                    $detail_racikan = db::connection('mysql2')->select('select * from mt_racikan_detail where kode_racik = ?', [$kode_barang]);
+                    foreach ($detail_racikan as $dr) {
+                        $cek_stok = db::connection('mysql2')->select('SELECT * FROM ti_kartu_stok WHERE NO = ( SELECT MAX(a.no ) AS nomor FROM ti_kartu_stok a WHERE kode_barang = ? AND kode_unit = ? AND sts_stok = ? )', ([$dr->kode_barang, auth()->user()->unit, '1']));
                         $mt_barang = DB::select('select * from mt_barang where kode_barang = ?', [$dr->kode_barang]);
                         $stok_current = ceil($cek_stok[0]->stok_current - $dr->qty_barang);
                         if ($stok_current < 0) {
@@ -462,7 +470,7 @@ class V2pelayananController extends Controller
                     }
                 } else {
                     //cek stok obat reguler
-                    $cek_stok = db::connection('mysql2')->select('SELECT * FROM ti_kartu_stok WHERE NO = ( SELECT MAX(a.no ) AS nomor FROM ti_kartu_stok a WHERE kode_barang = ? AND kode_unit = ? AND sts_stok = ? )', ([$do->kode_barang, auth()->user()->unit,'1']));
+                    $cek_stok = db::connection('mysql2')->select('SELECT * FROM ti_kartu_stok WHERE NO = ( SELECT MAX(a.no ) AS nomor FROM ti_kartu_stok a WHERE kode_barang = ? AND kode_unit = ? AND sts_stok = ? )', ([$do->kode_barang, auth()->user()->unit, '1']));
 
                     $mt_barang = DB::select('select * from mt_barang where kode_barang = ?', [$do->kode_barang]);
                     $stok_current = $cek_stok[0]->stok_current - $do->jumlah_layanan;
@@ -499,26 +507,26 @@ class V2pelayananController extends Controller
             }
 
             if ($data_kunjungan[0]->kode_penjamin != 'P01') {
-                $tagihan_penjamin_header = $totalheader+$JASA_BACA;
+                $tagihan_penjamin_header = $totalheader + $JASA_BACA;
                 $tagihan_pribadi_header = '0';
             } else {
                 $tagihan_penjamin_header = '0';
-                $tagihan_pribadi_header = $totalheader+$JASA_BACA;
+                $tagihan_pribadi_header = $totalheader + $JASA_BACA;
             }
             foreach ($arrayindex_reguler as $ar) {
                 $idheader = $ar['idheader'];
             }
             ts_layanan_header_dummy::where('id', $header->id)
                 ->update(['status_layanan' => $status_layanan, 'kode_tipe_transaksi' => $kode_tipe_transaki, 'total_layanan' => $totalheader, 'tagihan_penjamin' => $tagihan_penjamin_header, 'tagihan_pribadi' => $tagihan_pribadi_header]);
-                ti_kartu_stok::where('no_dokumen',$kode_layanan_header)->update(['sts_stok' => 1]);
+            ti_kartu_stok::where('no_dokumen', $kode_layanan_header)->update(['sts_stok' => 1]);
         }
 
-         //obat kronis
-         if ($cek_kron > 0) {
+        //obat kronis
+        if ($cek_kron > 0) {
             foreach ($arrayindex_far as $a) {
                 if ($a['jenisresep'] == 'reguler') {
                     //cek stok reguler
-                    $cek_stok = db::connection('mysql2')->select('SELECT * FROM ti_kartu_stok WHERE NO = ( SELECT MAX(a.no ) AS nomor FROM ti_kartu_stok a WHERE kode_barang = ? AND kode_unit = ? AND sts_stok = ? )', ([$a['kodebarang'], auth()->user()->unit,'1']));
+                    $cek_stok = db::connection('mysql2')->select('SELECT * FROM ti_kartu_stok WHERE NO = ( SELECT MAX(a.no ) AS nomor FROM ti_kartu_stok a WHERE kode_barang = ? AND kode_unit = ? AND sts_stok = ? )', ([$a['kodebarang'], auth()->user()->unit, '1']));
                     $stok_current = $cek_stok[0]->stok_current - $a['jumlah'];
                     if ($stok_current < 0) {
                         $data = [
@@ -535,7 +543,7 @@ class V2pelayananController extends Controller
                 INNER JOIN ts_detail_racikan_order b ON a.`id` = b.`id_header`
                 WHERE a.id = ?', [$header_racikan]);
                     foreach ($detail_racikan as $dr) {
-                        $cek_stok = db::connection('mysql2')->select('SELECT * FROM ti_kartu_stok WHERE NO = ( SELECT MAX(a.no ) AS nomor FROM ti_kartu_stok a WHERE kode_barang = ? AND kode_unit = ? AND sts_stok = ?)', ([$dr->kode_barang, auth()->user()->unit,'1']));
+                        $cek_stok = db::connection('mysql2')->select('SELECT * FROM ti_kartu_stok WHERE NO = ( SELECT MAX(a.no ) AS nomor FROM ti_kartu_stok a WHERE kode_barang = ? AND kode_unit = ? AND sts_stok = ?)', ([$dr->kode_barang, auth()->user()->unit, '1']));
                         $stok_current = $cek_stok[0]->stok_current - $dr->qty;
                         $mt_barang = db::select('select * from mt_barang where kode_barang = ?', [$dr->kode_barang]);
                         // dd($cek_stok);
@@ -736,9 +744,9 @@ class V2pelayananController extends Controller
                 $kode_barang = $do->kode_barang;
                 $awal = substr($kode_barang, 0, 1);
                 if ($awal == 'R') {
-                    $detail_racikan = db::connection('mysql2')->select('select * from mt_racikan_detail where kode_racik = ?',[$kode_barang]);
-                    foreach($detail_racikan as $dr){
-                        $cek_stok = db::connection('mysql2')->select('SELECT * FROM ti_kartu_stok WHERE NO = ( SELECT MAX(a.no ) AS nomor FROM ti_kartu_stok a WHERE kode_barang = ? AND kode_unit = ? AND sts_stok = ? )', ([$dr->kode_barang, auth()->user()->unit,'1']));
+                    $detail_racikan = db::connection('mysql2')->select('select * from mt_racikan_detail where kode_racik = ?', [$kode_barang]);
+                    foreach ($detail_racikan as $dr) {
+                        $cek_stok = db::connection('mysql2')->select('SELECT * FROM ti_kartu_stok WHERE NO = ( SELECT MAX(a.no ) AS nomor FROM ti_kartu_stok a WHERE kode_barang = ? AND kode_unit = ? AND sts_stok = ? )', ([$dr->kode_barang, auth()->user()->unit, '1']));
                         $mt_barang = DB::select('select * from mt_barang where kode_barang = ?', [$dr->kode_barang]);
                         $stok_current = $cek_stok[0]->stok_current - $dr->qty_barang;
                         if ($stok_current < 0) {
@@ -770,7 +778,7 @@ class V2pelayananController extends Controller
                     }
                 } else {
                     //cek stok obat reguler
-                    $cek_stok = db::connection('mysql2')->select('SELECT * FROM ti_kartu_stok WHERE NO = ( SELECT MAX(a.no ) AS nomor FROM ti_kartu_stok a WHERE kode_barang = ? AND kode_unit = ? AND sts_stok = ? )', ([$do->kode_barang, auth()->user()->unit,'1']));
+                    $cek_stok = db::connection('mysql2')->select('SELECT * FROM ti_kartu_stok WHERE NO = ( SELECT MAX(a.no ) AS nomor FROM ti_kartu_stok a WHERE kode_barang = ? AND kode_unit = ? AND sts_stok = ? )', ([$do->kode_barang, auth()->user()->unit, '1']));
 
                     $mt_barang = DB::select('select * from mt_barang where kode_barang = ?', [$do->kode_barang]);
                     $stok_current = $cek_stok[0]->stok_current - $do->jumlah_layanan;
@@ -818,7 +826,7 @@ class V2pelayananController extends Controller
             }
             ts_layanan_header_dummy::where('id', $header->id)
                 ->update(['status_layanan' => $status_layanan, 'kode_tipe_transaksi' => $kode_tipe_transaki, 'total_layanan' => $totalheader, 'tagihan_penjamin' => $tagihan_penjamin_header, 'tagihan_pribadi' => $tagihan_pribadi_header]);
-                ti_kartu_stok::where('no_dokumen',$kode_layanan_header)->update(['sts_stok' => 1]);
+            ti_kartu_stok::where('no_dokumen', $kode_layanan_header)->update(['sts_stok' => 1]);
         }
 
         ts_antrian_farmasi::whereRaw('id = ?', array($idantrian))->update(['status_antrian' => '1']);
@@ -866,7 +874,7 @@ class V2pelayananController extends Controller
     public function riwayat_obat_hari_ini(Request $request)
     {
         $unit = auth()->user()->unit;
-        $get_header = DB::connection('mysql2')->select("select *,fc_nama_unit1(kode_unit) as nama_unit from ts_layanan_header where kode_kunjungan = ? and kode_unit  IN ('4002','4003','4004','4005','4006','4008','4009','4010','4011','4012','4013')",[$request->kodekunjungan]);
+        $get_header = DB::connection('mysql2')->select("select *,fc_nama_unit1(kode_unit) as nama_unit from ts_layanan_header where kode_kunjungan = ? and kode_unit  IN ('4002','4003','4004','4005','4006','4008','4009','4010','4011','4012','4013')", [$request->kodekunjungan]);
         $list = DB::connection('mysql2')->select("SELECT a.kode_layanan_header,a.`kode_kunjungan`,a.id AS id_header
         ,b.id AS id_detail
         ,b.`kode_barang`
@@ -885,7 +893,7 @@ class V2pelayananController extends Controller
         $kodekunjungan = $request->kodekunjungan;
         // dd($get_header);
         return view('v2Layanan.tabel_riwayat_obat_hari_ini', compact([
-            'list','kodekunjungan','get_header'
+            'list', 'kodekunjungan', 'get_header'
         ]));
     }
     public function createKodeRacikan()
@@ -909,7 +917,7 @@ class V2pelayananController extends Controller
     public function cari_obat_reguler(Request $request)
     {
         $nama = $request->nama;
-        $pencarian_obat = DB::select('CALL sp_cari_obat_stok_all_erm(?,?)',[$nama,auth()->user()->unit]);
+        $pencarian_obat = DB::select('CALL sp_cari_obat_stok_all_erm(?,?)', [$nama, auth()->user()->unit]);
         return view('v2Layanan.tabel_obat_reguler', compact([
             'pencarian_obat'
         ]));
@@ -917,75 +925,75 @@ class V2pelayananController extends Controller
     public function cari_obat_komponen_racik(Request $request)
     {
         $nama = $request->nama;
-        $obat = DB::select('CALL sp_cari_obat_stok_all_erm(?,?)',[$nama,auth()->user()->unit]);
+        $obat = DB::select('CALL sp_cari_obat_stok_all_erm(?,?)', [$nama, auth()->user()->unit]);
         return view('v2Layanan.tabel_obat_komponen_racik', compact([
             'obat'
         ]));
     }
     public function add_draft_komponen(Request $request)
     {
-            $dataheader = json_decode($_POST['dataheader'], true);
-            $datalist = json_decode($_POST['datalist'], true);
-            $jumlahracikan = $request->jumlahracikan;
-            foreach ($dataheader as $nama) {
-                $index =  $nama['name'];
-                $value =  $nama['value'];
-                $dataSet[$index] = $value;
+        $dataheader = json_decode($_POST['dataheader'], true);
+        $datalist = json_decode($_POST['datalist'], true);
+        $jumlahracikan = $request->jumlahracikan;
+        foreach ($dataheader as $nama) {
+            $index =  $nama['name'];
+            $value =  $nama['value'];
+            $dataSet[$index] = $value;
+        }
+        $ts_kunjungan = DB::select('select * from ts_kunjungan where kode_kunjungan = ?', [$request->kodekunjungan]);
+        if ($ts_kunjungan[0]->kode_penjamin == 'PO1') {
+            $unit_tujuan = '4002';
+        } else {
+            $unit_tujuan = '4008';
+        }
+        $jumlah_racikan = $dataSet['jumlahracikan'];
+        $data_header = [
+            'nama_racikan' => $dataSet['namaracikan'],
+            'tipe_racikan' => $dataSet['tiperacikan'],
+            'jumlah_racikan' => $dataSet['jumlahracikan'],
+            'kemasan' => $dataSet['kemasanracikan'],
+            'aturan_pakai' => $dataSet['aturanpakairacikan'],
+            'pic' => auth()->user()->id,
+            'tgl_entry' => $this->get_now(),
+            'kode_unit' => auth()->user()->unit,
+            'kode_kunjungan' => $request->kodekunjungan,
+            'unit_tujuan' => $unit_tujuan,
+        ];
+        $header = order_racikan_header::create($data_header);
+        foreach ($datalist as $nama) {
+            $index =  $nama['name'];
+            $value =  $nama['value'];
+            $dataList[$index] = $value;
+            if ($index == 'dosisracik') {
+                $array_list[] = $dataList;
             }
-            $ts_kunjungan = DB::select('select * from ts_kunjungan where kode_kunjungan = ?', [$request->kodekunjungan]);
-            if ($ts_kunjungan[0]->kode_penjamin == 'PO1') {
-                $unit_tujuan = '4002';
-            } else {
-                $unit_tujuan = '4008';
-            }
-            $jumlah_racikan = $dataSet['jumlahracikan'];
-            $data_header = [
-                'nama_racikan' => $dataSet['namaracikan'],
-                'tipe_racikan' => $dataSet['tiperacikan'],
-                'jumlah_racikan' => $dataSet['jumlahracikan'],
-                'kemasan' => $dataSet['kemasanracikan'],
-                'aturan_pakai' => $dataSet['aturanpakairacikan'],
-                'pic' => auth()->user()->id,
+        }
+        // dd($array_list);
+        $list_ket = [];
+        foreach ($array_list as $arr) {
+            $qty = $arr['dosisracik'] * $dataSet['jumlahracikan'] / $arr['dosis'];
+            $list_ket[] = $arr['namaobat'] . ' Dosis Awal : ' . $arr['dosis'] . ' Dosis Racik : ' . $arr['dosisracik'] . ' Kebutuhan obat :' . $qty;
+            $data_detail = [
+                'id_header' => $header->id,
+                'kode_barang' => $arr['kodebarang'],
+                'qty' => $qty,
+                'dosis_awal' => $arr['dosis'],
+                'dosis_racik' =>  $arr['dosisracik'],
                 'tgl_entry' => $this->get_now(),
-                'kode_unit' => auth()->user()->unit,
-                'kode_kunjungan' => $request->kodekunjungan,
-                'unit_tujuan' => $unit_tujuan,
             ];
-            $header = order_racikan_header::create($data_header);
-            foreach ($datalist as $nama) {
-                $index =  $nama['name'];
-                $value =  $nama['value'];
-                $dataList[$index] = $value;
-                if ($index == 'dosisracik') {
-                    $array_list[] = $dataList;
-                }
-            }
-            // dd($array_list);
-            $list_ket = [];
-            foreach ($array_list as $arr) {
-                $qty = $arr['dosisracik'] * $dataSet['jumlahracikan'] / $arr['dosis'];
-                $list_ket[] = $arr['namaobat'] . ' Dosis Awal : ' . $arr['dosis'] . ' Dosis Racik : ' . $arr['dosisracik'].' Kebutuhan obat :'.$qty;
-                $data_detail = [
-                    'id_header' => $header->id,
-                    'kode_barang' => $arr['kodebarang'],
-                    'qty' => $qty,
-                    'dosis_awal' => $arr['dosis'],
-                    'dosis_racik' =>  $arr['dosisracik'],
-                    'tgl_entry' => $this->get_now(),
-                ];
-                order_racikan_detail::create($data_detail);
-            }
-            $ket = implode(' ', $list_ket);
-            // dd($list_ket);
-            if ($dataSet['kemasanracikan'] == 1) {
-                $sediaan = 'KAPSUL';
-            } elseif ($dataSet['kemasanracikan'] == 2) {
-                $sediaan = 'KERTAS PERKAMEN';
-            } elseif ($dataSet['kemasanracikan'] == 3) {
-                $sediaan = 'POT SALEP';
-            }
-            // dd($dataSet);
-            return "<div class='row mt-2 text-xs'>
+            order_racikan_detail::create($data_detail);
+        }
+        $ket = implode(' ', $list_ket);
+        // dd($list_ket);
+        if ($dataSet['kemasanracikan'] == 1) {
+            $sediaan = 'KAPSUL';
+        } elseif ($dataSet['kemasanracikan'] == 2) {
+            $sediaan = 'KERTAS PERKAMEN';
+        } elseif ($dataSet['kemasanracikan'] == 3) {
+            $sediaan = 'POT SALEP';
+        }
+        // dd($dataSet);
+        return "<div class='row mt-2 text-xs'>
             <div class='col-md-2'>
                 <div class='form-group'>
                     <label for='exampleFormControlInput1'>Nama Obat</label>
@@ -1253,15 +1261,15 @@ class V2pelayananController extends Controller
                 }
                 $qty = $d->jumlah_layanan - $d->jumlah_retur;
                 // if ($qty > 0) {
-                    $pdf->SetXY(0.5, $y7);
-                    $pdf->MultiCell(5, 0.4, $d->nama_barang.$d->nama_racik.'('. $d->keterangan .')');
-                    $pdf->SetXY(7.3, $y7);
-                    $pdf->Cell(10, 0.5, $qty, 0, 1);
-                    $pdf->SetXY(8.5, $y7);
-                    $pdf->Cell(10, 0.5, number_format($jumlah, 2), 0, 1);
-                    $y7 = $y7 + 0.8;
-                    $total_item = $total_item + 1;
-                    $subtotal = $subtotal + $jumlah;
+                $pdf->SetXY(0.5, $y7);
+                $pdf->MultiCell(5, 0.4, $d->nama_barang . $d->nama_racik . '(' . $d->keterangan . ')');
+                $pdf->SetXY(7.3, $y7);
+                $pdf->Cell(10, 0.5, $qty, 0, 1);
+                $pdf->SetXY(8.5, $y7);
+                $pdf->Cell(10, 0.5, number_format($jumlah, 2), 0, 1);
+                $y7 = $y7 + 0.8;
+                $total_item = $total_item + 1;
+                $subtotal = $subtotal + $jumlah;
                 // }
             }
             if ($d->kode_tarif_detail == 'TX23523') {
@@ -1310,7 +1318,7 @@ class V2pelayananController extends Controller
         exit;
         // return;
     }
-    public function cetaknota_new($kodekunjungan,$kodeheader)
+    public function cetaknota_new($kodekunjungan, $kodeheader)
     {
         // dd($kodeheader);
         // SP_Karcis_Pendaftaran3(kodelayananheader,norm)
