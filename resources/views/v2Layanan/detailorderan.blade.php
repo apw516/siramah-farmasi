@@ -64,7 +64,8 @@
                     class="bi bi-plus mr-1"></i> Cari Obat</button>
             <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#modalbuatracikan"><i
                     class="bi bi-plus mr-1"></i> Buat Racikan</button>
-            <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#modalriwayatracikan"><i class="bi bi-search mr-1"></i>Riwayat Racikan</button>
+            <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#modalriwayatracikan"><i
+                    class="bi bi-search mr-1"></i>Riwayat Racikan</button>
             <form action="" method="post" class="form_input_obat mb-2">
                 <div class="field_input_obat" id="field_input_obat_fix">
                     <div>
@@ -192,7 +193,7 @@
                         </div>
                     </div>
                     <div class="col-md-2">
-                        <button class="btn btn-success btn-sm" style="margin-top:32px" onclick="cariobatreguler()"><i
+                        <button class="btn btn-success btn-sm" style="margin-top:32px" id="cariobatreguler"><i
                                 class="bi bi-search mr-1"></i>Cari Obat</button>
                     </div>
                 </div>
@@ -277,7 +278,7 @@
                                 <input type="text" class="form-control" id="namakomponen"
                                     placeholder="Masukan nama obat ...">
                             </div>
-                            <button type="button" class="btn btn-primary mb-2" onclick="carikomponenracikan()"><i
+                            <button type="button" class="btn btn-primary mb-2 carikomponenracik" id="carikomponenracik"><i
                                     class="bi bi-search"></i> Cari Obat</button>
                         </div>
                         <div class="v_tabel_obat_komponen mt-3">
@@ -300,11 +301,48 @@
         </div>
     </div>
 </div>
+<!-- Modal -->
+<div class="modal fade" id="modalriwayatracikan" tabindex="-1" aria-labelledby="exampleModalLabel"
+    aria-hidden="true">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="exampleModalLabel">Riwayat Racikan Farmasi ...</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
 
 <script>
+    var input = document.getElementById("namaobatreguler");
+    input.addEventListener("keypress", function(event) {
+        if (event.key === "Enter") {
+            event.preventDefault();
+            document.getElementById("cariobatreguler").click();
+        }
+    });
+    var input = document.getElementById("namakomponen");
+    input.addEventListener("keypress", function(event) {
+        if (event.key === "Enter") {
+            event.preventDefault();
+            document.getElementById("carikomponenracik").click();
+        }
+    });
     function kembali() {
         $('.v_satu').removeAttr('hidden', true)
         $('.v_dua').attr('hidden', true)
+        get_tabel_racikan()
+        get_tabel_non_racikan()
+        caripasien_manual()
     }
     $(document).ready(function() {
         ambilriwayatobat_today()
@@ -397,6 +435,7 @@
             }
         });
     }
+
     function carikomponenracikan() {
         nama = $('#namakomponen').val()
         spinner = $('#loader')
@@ -414,6 +453,7 @@
             }
         });
     }
+
     function simpanracikan() {
         Swal.fire({
             title: "Anda yakin ?",
@@ -464,4 +504,38 @@
             }
         });
     }
+    $("#cariobatreguler").on('click', function(event) {
+        nama = $('#namaobatreguler').val()
+        spinner = $('#loader2')
+        spinner.show();
+        $.ajax({
+            type: 'post',
+            data: {
+                _token: "{{ csrf_token() }}",
+                nama
+            },
+            url: '<?= route('cari_obat_reguler2') ?>',
+            success: function(response) {
+                $('.v_tabel_obat_reguler').html(response);
+                spinner.hide()
+            }
+        });
+    })
+    $("#carikomponenracik").on('click', function(event) {
+        nama = $('#namakomponen').val()
+        spinner = $('#loader2')
+        spinner.show();
+        $.ajax({
+            type: 'post',
+            data: {
+                _token: "{{ csrf_token() }}",
+                nama,
+            },
+            url: '<?= route('cari_obat_komponen_racik') ?>',
+            success: function(response) {
+                $('.v_tabel_obat_komponen').html(response);
+                spinner.hide()
+            }
+        });
+    })
 </script>
