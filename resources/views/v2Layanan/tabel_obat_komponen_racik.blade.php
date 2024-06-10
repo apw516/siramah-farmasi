@@ -2,21 +2,25 @@
     <thead>
         <th>Nama Obat</th>
         <th>Nama Generik</th>
+        <th>stok</th>
         <th>Dosis</th>
         <th>Sediaan</th>
         <th>Aturan Pakai</th>
     </thead>
     <tbody>
         @foreach ($obat as $o)
-            <tr class="pilihobatkomponen" sediaan="{{ $o->sediaan }}" kode_barang="{{ $o->kode_barang }}"
-                nama_barang="{{ $o->nama_barang }}" dosis="{{ $o->dosis }}" aturanpakai="{{ $o->aturan_pakai }}"
-                nama_generik={{ $o->nama_generik }}>
-                <td>{{ $o->nama_barang }}</td>
-                <td>{{ $o->nama_generik }}</td>
-                <td>{{ $o->dosis }}</td>
-                <td>{{ $o->sediaan }}</td>
-                <td>{{ $o->aturan_pakai }}</td>
-            </tr>
+            @if ($o->stok_current > 0)
+                <tr class="pilihobatkomponen" sediaan="{{ $o->sediaan }}" kode_barang="{{ $o->kode_barang }}"
+                    nama_barang="{{ $o->nama_barang }}" dosis="{{ $o->dosis }}" aturanpakai="{{ $o->aturan_pakai }}"
+                    nama_generik={{ $o->nama_generik }}>
+                    <td>{{ $o->nama_barang }}</td>
+                    <td>{{ $o->nama_generik }}</td>
+                    <td>{{ $o->stok_current }}</td>
+                    <td>{{ $o->dosis }}</td>
+                    <td>{{ $o->sediaan }}</td>
+                    <td>{{ $o->aturan_pakai }}</td>
+                </tr>
+            @endif
         @endforeach
     </tbody>
 </table>
