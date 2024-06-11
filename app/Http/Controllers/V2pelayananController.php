@@ -613,6 +613,7 @@ class V2pelayananController extends Controller
                     }
                     $kode_detail_obat = $this->createLayanandetail();
                     try {
+                        $grandtotal_detail = $total + 1700;
                         $ts_layanan_detail = [
                             'id_layanan_detail' => $kode_detail_obat,
                             'kode_layanan_header' => $kode_layanan_header,
@@ -620,7 +621,8 @@ class V2pelayananController extends Controller
                             'total_tarif' => $mt_barang[0]->harga_jual,
                             'jumlah_layanan' => $a['jumlah'],
                             'total_layanan' => $total,
-                            'grantotal_layanan' => $total,
+                            'grantotal_layanan' => $grandtotal_detail,
+                            'diskon_layanan' => '1700',
                             'status_layanan_detail' => 'OPN',
                             'tgl_layanan_detail' => $now,
                             'kode_barang' => $a['kodebarang'],
@@ -643,7 +645,7 @@ class V2pelayananController extends Controller
                         ];
                         echo json_encode($data);
                     }
-                    $totalheader = $totalheader + $total;
+                    $totalheader = $totalheader + $grandtotal_detail;
                 } else {
                     //ambildetailracikan
                     $kode_racikan_header = $a['kodebarang'];
@@ -674,28 +676,38 @@ class V2pelayananController extends Controller
                         'kemasan' => $kemasan,
                     ];
                     $header_r = mt_racikan::create($mt_racik_header);
-                    $total = 0;
+                    $totalracik = 0;
                     foreach ($detail_racikan as $dr) {
                         $mt_barang = db::select('select * from mt_barang where kode_barang = ?', [$dr->kode_barang]);
+                        $jasa_embalase = 1700;
+                        $gt_barang = $mt_barang[0]->harga_jual * $dr->qty;
+                        $gt_barang_total = $gt_barang + $jasa_embalase;
                         $mt_racik_detail = [
                             'kode_racik' => $kode_racik,
                             'kode_barang' => $dr->kode_barang,
                             'qty_barang' => $dr->qty,
                             'satuan_barang' => $mt_barang[0]->satuan,
                             'harga_satuan_barang' => $mt_barang[0]->harga_jual,
-                            'grantotal_barang' => $mt_barang[0]->harga_jual * $dr->qty,
+                            'grantotal_barang' => $gt_barang_total,
+                            'harga_brg_embalase' => $jasa_embalase,
                         ];
-                        $total = $total + $mt_barang[0]->harga_jual * $dr->qty;
+                        $totalracik = $totalracik + $gt_barang_total;
                         $savedetail_racikan = mt_racikan_detail_dummy::create($mt_racik_detail);
+                    }
+                    mt_racikan::whereRaw('id = ?', array($header_r->id))->update(['total_racik' => $totalracik]);
+                    if ($kemasan == 'POT_SALEP') {
+                        $jasa_racik = '10000';
+                    } else {
+                        $jasa_racik = '700' * $jumlah_racikan;
                     }
                     if ($data_kunjungan[0]->kode_penjamin != 'P01') {
                         $tagihan_pribadi = 0;
-                        $tagihan_penjamin = $total;
+                        $tagihan_penjamin = $totalracik;
                         $kategori_resep = 'Resep Kredit';
                         $kode_tipe_transaki = 2;
                         $status_layanan = 2;
                     } else {
-                        $tagihan_pribadi = $total;
+                        $tagihan_pribadi = $totalracik;
                         $tagihan_penjamin = 0;
                         $kategori_resep = 'Resep Tunai';
                         $kode_tipe_transaki = 1;
@@ -707,13 +719,14 @@ class V2pelayananController extends Controller
                             'id_layanan_detail' => $kode_detail_obat,
                             'kode_layanan_header' => $kode_layanan_header,
                             'kode_tarif_detail' => '',
-                            'total_tarif' => $total,
+                            'total_tarif' => $totalracik,
                             'jumlah_layanan' => $jumlah_racikan,
-                            'total_layanan' => $total,
-                            'grantotal_layanan' => $total,
+                            'total_layanan' => $totalracik,
+                            'grantotal_layanan' => $totalracik + $jasa_racik,
                             'status_layanan_detail' => 'OPN',
                             'tgl_layanan_detail' => $now,
                             'kode_barang' => $kode_racik,
+                            'diskon_layanan' => $jasa_racik,
                             'aturan_pakai' => $detail_racikan[0]->aturan_pakai,
                             'kategori_resep' => $kategori_resep,
                             'satuan_barang' => '',
@@ -725,6 +738,7 @@ class V2pelayananController extends Controller
                             'kode_dokter1' => $data_kunjungan[0]->kode_paramedis,
                             'keterangan' => $a['keterangan']
                         ];
+                        $grandtotal_racik = $totalracik + $jasa_racik;
                         $detail = ts_layanan_detail_dummy::create($ts_layanan_detail);
                         ts_layanan_header_order::whereRaw('id = ?', array($a['idheader']))->update(['status_order' => '2', 'status_layanan' => '2']);
                     } catch (\Exception $e) {
@@ -734,9 +748,36 @@ class V2pelayananController extends Controller
                         ];
                         echo json_encode($data);
                     }
-                    $totalheader = $totalheader + $total;
+                    $totalheader = $totalheader + $grandtotal_racik;
                 }
             }
+
+            if ($data_kunjungan[0]->kode_penjamin != 'P01') {
+                $tagian_penjamin_head = 1000;
+                $tagian_pribadi_head = 0;
+            } else {
+                $tagian_penjamin_head = 0;
+                $tagian_pribadi_head = 1000;
+            }
+            $JASA_BACA = 1000;
+            $ts_layanan_detail3 = [
+                'id_layanan_detail' => $this->createLayanandetail(),
+                'kode_layanan_header' => $kode_layanan_header,
+                'kode_tarif_detail' => 'TX23523',
+                'total_tarif' => $JASA_BACA,
+                'jumlah_layanan' => 1,
+                'total_layanan' => $JASA_BACA,
+                'grantotal_layanan' => $JASA_BACA,
+                'status_layanan_detail' => 'OPN',
+                'tgl_layanan_detail' => $now,
+                'kode_dokter1' => $data_kunjungan[0]->kode_paramedis,
+                'tagihan_pribadi' => $tagian_pribadi_head,
+                'tagihan_penjamin' => $tagian_penjamin_head,
+                'tgl_layanan_detail_2' => $now,
+                'row_id_header' => $header->id,
+            ];
+            $detail3 = ts_layanan_detail_dummy::create($ts_layanan_detail3);
+
 
             //membedakan racikan dan non racikan;
             $get_detail_obat = DB::connection('mysql2')->select('select * from ts_layanan_detail where row_id_header = ? and kode_tarif_detail = ?', [$header->id, '']);
@@ -748,7 +789,7 @@ class V2pelayananController extends Controller
                     foreach ($detail_racikan as $dr) {
                         $cek_stok = db::connection('mysql2')->select('SELECT * FROM ti_kartu_stok WHERE NO = ( SELECT MAX(a.no ) AS nomor FROM ti_kartu_stok a WHERE kode_barang = ? AND kode_unit = ? AND sts_stok = ? )', ([$dr->kode_barang, auth()->user()->unit, '1']));
                         $mt_barang = DB::select('select * from mt_barang where kode_barang = ?', [$dr->kode_barang]);
-                        $stok_current = $cek_stok[0]->stok_current - $dr->qty_barang;
+                        $stok_current = ceil($cek_stok[0]->stok_current - $dr->qty_barang);
                         if ($stok_current < 0) {
                             $data = [
                                 'kode' => 500,
@@ -815,13 +856,13 @@ class V2pelayananController extends Controller
             }
 
             if ($data_kunjungan[0]->kode_penjamin != 'P01') {
-                $tagihan_penjamin_header = $totalheader;
+                $tagihan_penjamin_header = $totalheader + $JASA_BACA;
                 $tagihan_pribadi_header = '0';
             } else {
                 $tagihan_penjamin_header = '0';
-                $tagihan_pribadi_header = $totalheader;
+                $tagihan_pribadi_header = $totalheader + $JASA_BACA;
             }
-            foreach ($arrayindex_reguler as $ar) {
+            foreach ($arrayindex_kronis as $ar) {
                 $idheader = $ar['idheader'];
             }
             ts_layanan_header_dummy::where('id', $header->id)
