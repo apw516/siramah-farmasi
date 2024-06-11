@@ -80,7 +80,7 @@ class V2pelayananController extends Controller
         INNER JOIN ts_layanan_detail_order b ON a.id = b.`row_id_header`
         LEFT OUTER JOIN mt_barang c ON b.`kode_barang` = c.`kode_barang`
         LEFT OUTER JOIN ts_header_racikan_order d ON b.`kode_barang` = d.id
-        WHERE a.`kode_kunjungan` = '$kodekunjungan' AND a.`status_layanan` = '1' AND b.`status_layanan_detail` = 'OPN' AND a.status_order = '1'");
+        WHERE a.`kode_kunjungan` = '$kodekunjungan' AND a.`status_layanan` = '1' AND b.`status_layanan_detail` = 'OPN' AND a.status_order = '98'");
         return view('v2Layanan.detailorderan', compact([
             'ts_kunjungan', 'kodekunjungan', 'data_resep', 'idantrian'
         ]));

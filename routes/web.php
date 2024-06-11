@@ -4,6 +4,7 @@ use App\Http\Controllers\antrianController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\PelayananController;
+use App\Http\Controllers\ReportingController;
 use App\Http\Controllers\V2pelayananController;
 use Illuminate\Support\Facades\Route;
 
@@ -71,3 +72,6 @@ Route::get('cetaknotafarmasi_2/{id}/{kodeheader}', [V2pelayananController::class
 //antrian
 Route::get('/antrian', [antrianController::class, 'Index'])->name('index');
 Route::post('/ambilantrian', [antrianController::class, 'ambilantrian'])->name('ambilantrian');
+
+Route::get('datapemakaianobat', [ReportingController::class, 'index'])->name('datapemakaianobat');
+Route::get('ambil_data_pemakaian', [ReportingController::class, 'ambil_data_pemakaian'])->name('ambil_data_pemakaian');
