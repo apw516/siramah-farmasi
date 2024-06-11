@@ -313,7 +313,9 @@
                 </button>
             </div>
             <div class="modal-body">
+                <div class="v_riwayat_racikan">
 
+                </div>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
@@ -346,6 +348,7 @@
     }
     $(document).ready(function() {
         ambilriwayatobat_today()
+        ambilriwayatracikan()
     })
     var wrapper = $(".field_input_obat");
     $(wrapper).on("click", ".remove_field", function(e) { //user click on remove
@@ -538,4 +541,18 @@
             }
         });
     })
+    function ambilriwayatracikan()
+    {
+        $.ajax({
+            type: 'post',
+            data: {
+                _token: "{{ csrf_token() }}"
+            },
+            url: '<?= route('riwayat_racikan_farmasi') ?>',
+            success: function(response) {
+                $('.v_riwayat_racikan').html(response);
+                // $('#daftarpxumum').attr('disabled', true);
+            }
+        });
+    }
 </script>

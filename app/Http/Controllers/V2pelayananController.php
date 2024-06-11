@@ -1380,7 +1380,8 @@ class V2pelayananController extends Controller
             ->setDataSource($config)
             ->export('Pdf');
     }
-    public function cetakEtiket_new($id){
+    public function cetakEtiket_new($id)
+    {
         $get_header = DB::connection('mysql2')->select('select * from ts_layanan_header where id = ?', [$id]);
         // dd($get_header);
         // $KODE_HEADER = $DH[0]->kode_layanan_header;
@@ -1398,5 +1399,100 @@ class V2pelayananController extends Controller
         $report->load_xml_file($filename)
             ->setDataSource($config)
             ->export('Pdf');
+    }
+    public function riwayat_racikan_farmasi()
+    {
+        $header = DB::connection('mysql2')->select('select * from ts_header_racikan_order where kode_unit = ?', [auth()->user()->unit]);
+        $detail = DB::connection('mysql2')->select('select *,c.nama_barang from ts_header_racikan_order a
+        INNER JOIN ts_detail_racikan_order b on a.id = b.id_header
+        INNER JOIN mt_barang c on b.kode_barang = c.kode_barang
+        where a.kode_unit = ?', [auth()->user()->unit]);
+        return view('v2Layanan.tabel_riwayat_racikan', compact([
+            'header', 'detail'
+        ]));
+    }
+    public function v2_add_riwayat_racik(Request $request)
+    {
+        $id_header = $request->id;
+        $header = DB::connection('mysql2')->select('select * from ts_header_racikan_order where id =?', [$id_header]);
+        $detail = DB::connection('mysql2')->select('select *,b.nama_barang from ts_detail_racikan_order a
+        inner join mt_barang b on a.kode_barang = b.kode_barang
+        where id_header =?',[$id_header]);
+        $nama_racikan = $header[0]->nama_racikan;
+        $kode_racik = $header[0]->id;
+        $jumlah_racik = $header[0]->jumlah_racikan;
+        $aturan_pakai = $header[0]->aturan_pakai;
+        if ($header[0]->kemasan == 1) {
+            $sediaan = 'KAPSUL';
+        } elseif ($header[0]->kemasan == 2) {
+            $sediaan = 'KERTAS PERKAMEN';
+        } elseif ($header[0]->kemasan == 3) {
+            $sediaan = 'POT SALEP';
+        }
+
+        $list_ket = [];
+        foreach ($detail as $arr) {
+            $qty = $arr->dosis_racik * $jumlah_racik / $arr->dosis_awal;
+            $list_ket[] = $arr->nama_barang . ' Dosis Awal : ' . $arr->dosis_awal . ' Dosis Racik : ' . $arr->dosis_racik . ' Kebutuhan obat :' . $qty;
+        }
+        $ket = implode(' ', $list_ket);
+        return "<div class='row mt-2 text-xs'>
+        <div class='col-md-2'>
+            <div class='form-group'>
+                <label for='exampleFormControlInput1'>Nama Obat</label>
+                <input readonly type='text' class='form-control form-control-sm' id='nama_obat' name='nama_obat' value='$nama_racikan'placeholder='name@example.com'>
+                <input hidden readonly type='text' class='form-control form-control-sm' id='kodebarang' name='kodebarang' value='$kode_racik'placeholder='name@example.com'>
+                <input hidden readonly type='text' class='form-control form-control-sm' id='idheader' name='idheader' value='0'placeholder='name@example.com'>
+                <input hidden readonly type='text' class='form-control form-control-sm' id='iddetail' name='iddetail' value='0'placeholder='name@example.com'>
+            </div>
+        </div>
+        <div class='col-md-1'>
+            <div class='form-group'>
+                <label for='exampleFormControlInput1'>Jenis Resep</label>
+                <input readonly type='text' class='form-control form-control-sm' id='jenisresep' name='jenisresep' value='racikan' placeholder='name@example.com'>
+            </div>
+        </div>
+        <div class='col-md-1'>
+            <div class='form-group'>
+                <label for='exampleFormControlInput1'>Dosis</label>
+                <input readonly type='text' class='form-control form-control-sm' id='dosis' name='dosis' value='-' placeholder='name@example.com'>
+            </div>
+        </div>
+        <div class='col-md-1'>
+            <div class='form-group'>
+                <label for='exampleFormControlInput1'>Sediaan</label>
+                <input readonly type='text' class='form-control form-control-sm' id='sediaan' name='sediaan' value='$sediaan' placeholder='name@example.com'>
+            </div>
+        </div>
+        <div class='col-md-1'>
+            <div class='form-group'>
+                <label for='exampleFormControlInput1'>Tipe anestesi</label>
+                <select class='form-control form-control-sm' id='kronis' name='kronis'>
+                <option value='80'>Reguler</option>
+                <option value='81'>Kronis</option>
+                <option value='82'>Kemoterapi</option>
+                <option value='83'>Hibah</option></select>
+            </div>
+        </div>
+        <div class='col-md-1'>
+            <div class='form-group'>
+                <label for='exampleFormControlInput1'>Jumlah</label>
+                <input readonly type='text' class='form-control form-control-sm' id='jumlah' name='jumlah' value='$jumlah_racik' placeholder='name@example.com'>
+            </div>
+        </div>
+        <div class='col-md-2'>
+            <div class='form-group'>
+                <label for='exampleFormControlInput1'>Aturan Pakai</label>
+                <textarea readonly type='text' class='form-control form-control-sm' id='aturanpakai' name='aturanpakai' value='' placeholder='name@example.com'>$aturan_pakai</textarea>
+            </div>
+        </div>
+        <div class='col-md-2'>
+            <div class='form-group'>
+                <label for='exampleFormControlInput1'>Keterangan</label>
+                <textarea readonly type='text' class='form-control form-control-sm' id='keterangan' name='keterangan' value='' placeholder='name@example.com'>$ket</textarea>
+            </div>
+        </div>
+        <i class='bi bi-x-square remove_field form-group col-md-1 text-danger' kode2='' subtot='' jenis='' nama_barang='' kode_barang='' id_stok='' harga2='' satuan='' stok='' qty='' harga='' disc='' dosis='' sub='' sub2='' status='80' jenisracik='racikan'></i>
+    </div>";
     }
 }

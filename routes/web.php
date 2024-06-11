@@ -59,9 +59,11 @@ Route::post('tampildatapasien', [V2pelayananController::class, 'tampildatapasien
 Route::post('ambil_detail_orderan', [V2pelayananController::class, 'ambil_detail_orderan'])->name('ambil_detail_orderan');
 Route::post('simpan_pelayanan_resep_reguler', [V2pelayananController::class, 'simpan_pelayanan_resep_reguler'])->name('simpan_pelayanan_resep_reguler');
 Route::post('riwayat_obat_hari_ini', [V2pelayananController::class, 'riwayat_obat_hari_ini'])->name('riwayat_obat_hari_ini');
+Route::post('riwayat_racikan_farmasi', [V2pelayananController::class, 'riwayat_racikan_farmasi'])->name('riwayat_racikan_farmasi');
 Route::post('cari_obat_reguler2', [V2pelayananController::class, 'cari_obat_reguler'])->name('cari_obat_reguler2');
 Route::post('cari_obat_komponen_racik', [V2pelayananController::class, 'cari_obat_komponen_racik'])->name('cari_obat_komponen_racik');
 Route::post('v2_add_draft_komponen', [V2pelayananController::class, 'add_draft_komponen'])->name('v2_add_draft_komponen');
+Route::post('v2_add_riwayat_racik', [V2pelayananController::class, 'v2_add_riwayat_racik'])->name('v2_add_riwayat_racik');
 
 Route::get('cetaketiket_2_all/{id}', [V2pelayananController::class, 'cetaketiket_2_all']); //formpasien_bpjs
 Route::get('cetaketiket_2/{id}', [V2pelayananController::class, 'cetakEtiket_new']); //formpasien_bpjs
