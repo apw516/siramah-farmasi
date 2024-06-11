@@ -1173,19 +1173,19 @@ class V2pelayananController extends Controller
             if ($d->kode_barang != '') {
                 $pdf->SetXY(0, $i);
                 $pdf->Cell(0.1, 10, '' . $i, 0, 1);
-                $pdf->SetFont('Arial', '', 8);
+                $pdf->SetFont('Arial', 'B', 8);
                 $pdf->SetXY(0, 0.4);
                 $pdf->Cell(0.3, 0.10, $dtpx[0]->no_rm, 0, 0);
                 $pdf->SetXY(0.8, 0.4);
                 $pdf->Cell(0.3, 0.10, $dtpx[0]->tgl_lahir . '/ usia ' . $dtpx[0]->umur, 0, 0);
                 $pdf->SetXY(0, 0.6);
                 $pdf->Cell(0.3, 0.10, $dtpx[0]->nama, 0, 0);
-                $pdf->SetFont('Arial', '', 5);
+                $pdf->SetFont('Arial', 'B', 5);
                 $pdf->SetXY(0, 0.8);
                 $pdf->MultiCell(1.9, 0.1, $dtpx[0]->alamat);
                 $y = $pdf->GetY();
                 // $pdf->Cell(0.3, 0.10, $dtpx[0]->alamat, 0, 0);
-                $pdf->SetFont('Arial', 'B', 7);
+                $pdf->SetFont('Arial', 'B', 7.9);
                 $pdf->SetXY(0, $y + 0.1);
                 $pdf->MultiCell(1.8, 0.10, $d->nama_barang . $d->nama_racik);
                 $y = $pdf->GetY() + 0.007;
@@ -1193,8 +1193,8 @@ class V2pelayananController extends Controller
                 $pdf->MultiCell(1.9, 0.10, $d->aturan_pakai);
                 // $pdf->Cell(0.3, 0.10, $d->nama_barang, 0, 0);
                 // //A set
-                $code = 'CODE 128';
-                $pdf->Code128(0.1, 1.6, $code, 1.8, 0.4);
+                // $code = 'CODE 128';
+                // $pdf->Code128(0.1, 1.6, $code, 1.8, 0.4);
                 // // $pdf->Cell(0.3, 0.10, $barcode, 0, 0);
                 $y = $pdf->GetY();
                 $pdf->SetFont('Arial', 'b', 5);
@@ -1374,6 +1374,25 @@ class V2pelayananController extends Controller
         $QUERY->execute();
         $data = $QUERY->fetchAll();
         $filename = 'C:\cetakanresep\cetakanresepdp2.jrxml';
+        $config = ['driver' => 'array', 'data' => $data];
+        $report = new PHPJasperXML();
+        $report->load_xml_file($filename)
+            ->setDataSource($config)
+            ->export('Pdf');
+    }
+    public function cetakEtiket_new($id){
+        $get_header = DB::connection('mysql2')->select('select * from ts_layanan_header where id = ?', [$id]);
+        // dd($get_header);
+        // $KODE_HEADER = $DH[0]->kode_layanan_header;
+        // $ID_HEADER = $DK[0]->counter;
+        $kodeheader = $get_header[0]->kode_layanan_header;
+        // $TE = db::connection('mysql')->select("CALL `SP_CETAK_ETIKET_FARMASI_WD`('$kodeheader','$id')");
+        // DD($TE);
+        $PDO = DB::connection()->getPdo();
+        $QUERY = $PDO->prepare("CALL SP_CETAK_ETIKET_FARMASI_WD('$kodeheader','$id')");
+        $QUERY->execute();
+        $data = $QUERY->fetchAll();
+        $filename = 'C:\cetakanresep\etiket.jrxml';
         $config = ['driver' => 'array', 'data' => $data];
         $report = new PHPJasperXML();
         $report->load_xml_file($filename)
