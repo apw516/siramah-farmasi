@@ -387,7 +387,7 @@ class V2pelayananController extends Controller
                             'tgl_layanan_detail_2' => $now,
                             'row_id_header' => $header->id,
                             'kode_dokter1' => $data_kunjungan[0]->kode_paramedis,
-                            'keterangan' => $a['keterangan']
+                            'keterangan01' => $a['keterangan']
                         ];
                         $grandtotal_racik = $totalracik + $jasa_racik;
                         $detail = ts_layanan_detail_dummy::create($ts_layanan_detail);
@@ -463,7 +463,7 @@ class V2pelayananController extends Controller
                             'act' => '1',
                             'act_ed' => '1',
                             'inputby' => auth()->user()->id,
-                            'keterangan' => $data_kunjungan[0]->no_rm . '|' . $data_kunjungan[0]->nama_pasien . '|' . $data_kunjungan[0]->alamat_pasien,
+                            'keterangan01' => $data_kunjungan[0]->no_rm . '|' . $data_kunjungan[0]->nama_pasien . '|' . $data_kunjungan[0]->alamat_pasien,
                             'sts_stok' => '2'
                         ];
                         $insert_ti_kartu_stok = ti_kartu_stok::create($data_ti_kartu_stok);
