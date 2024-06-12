@@ -213,7 +213,7 @@ class V2pelayananController extends Controller
             $unitlog = auth()->user()->unit;
             $r = DB::connection('mysql2')->select("CALL GET_NOMOR_LAYANAN_HEADER($unitlog)");
             $kode_layanan_header = $r[0]->no_trx_layanan;
-            if (strlen($kode_layanan_header) < 5) {
+            if ($kode_layanan_header == '') {
                 $year = date('y');
                 $kode_layanan_header = $unit[0]->prefix_unit . $year . date('m') . date('d') . '000001';
                 DB::connection('mysql2')->select('insert into mt_nomor_trx (tgl,no_trx_layanan,unit) values (?,?,?)', [date('Y-m-d h:i:s'), $kode_layanan_header, $kodeunit]);
@@ -273,7 +273,7 @@ class V2pelayananController extends Controller
                             'jumlah_layanan' => $a['jumlah'],
                             'total_layanan' => $total,
                             'grantotal_layanan' => $grandtotal_detail,
-                            'diskon_layanan' => '1700',
+                            'diskonan_global' => '1700',
                             'status_layanan_detail' => 'OPN',
                             'tgl_layanan_detail' => $now,
                             'kode_barang' => $a['kodebarang'],
@@ -377,7 +377,7 @@ class V2pelayananController extends Controller
                             'status_layanan_detail' => 'OPN',
                             'tgl_layanan_detail' => $now,
                             'kode_barang' => $kode_racik,
-                            'diskon_layanan' => $jasa_racik,
+                            'diskonan_global' => $jasa_racik,
                             'aturan_pakai' => $detail_racikan[0]->aturan_pakai,
                             'kategori_resep' => $kategori_resep,
                             'satuan_barang' => '',
@@ -562,7 +562,7 @@ class V2pelayananController extends Controller
             $unitlog = auth()->user()->unit;
             $r = DB::connection('mysql2')->select("CALL GET_NOMOR_LAYANAN_HEADER($unitlog)");
             $kode_layanan_header = $r[0]->no_trx_layanan;
-            if (strlen($kode_layanan_header) < 5) {
+            if ($kode_layanan_header == '') {
                 $year = date('y');
                 $kode_layanan_header = $unit[0]->prefix_unit . $year . date('m') . date('d') . '000001';
                 DB::connection('mysql2')->select('insert into mt_nomor_trx (tgl,no_trx_layanan,unit) values (?,?,?)', [date('Y-m-d h:i:s'), $kode_layanan_header, $kodeunit]);
@@ -622,7 +622,7 @@ class V2pelayananController extends Controller
                             'jumlah_layanan' => $a['jumlah'],
                             'total_layanan' => $total,
                             'grantotal_layanan' => $grandtotal_detail,
-                            'diskon_layanan' => '1700',
+                            'diskonan_global' => '1700',
                             'status_layanan_detail' => 'OPN',
                             'tgl_layanan_detail' => $now,
                             'kode_barang' => $a['kodebarang'],
@@ -726,7 +726,7 @@ class V2pelayananController extends Controller
                             'status_layanan_detail' => 'OPN',
                             'tgl_layanan_detail' => $now,
                             'kode_barang' => $kode_racik,
-                            'diskon_layanan' => $jasa_racik,
+                            'diskonan_global' => $jasa_racik,
                             'aturan_pakai' => $detail_racikan[0]->aturan_pakai,
                             'kategori_resep' => $kategori_resep,
                             'satuan_barang' => '',
