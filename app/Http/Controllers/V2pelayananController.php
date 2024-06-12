@@ -76,6 +76,7 @@ class V2pelayananController extends Controller
         ,d.`nama_racikan` AS nama_racikan
         ,b.kategori_resep
         ,d.kemasan
+        ,b.keterangan
         FROM ts_layanan_header_order a
         INNER JOIN ts_layanan_detail_order b ON a.id = b.`row_id_header`
         LEFT OUTER JOIN mt_barang c ON b.`kode_barang` = c.`kode_barang`
