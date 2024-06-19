@@ -1360,18 +1360,17 @@ class V2pelayananController extends Controller
         exit;
         // return;
     }
-    public function cetaknota_new($kodekunjungan, $kodeheader)
+    public function cetaknota_new($kodekunjungan, $kodeheader,$idheader)
     {
         // dd($kodeheader);
         // SP_Karcis_Pendaftaran3(kodelayananheader,norm)
         // $DH = DB::select('select * from ts_layanan_header where id = ?', [$id]);
         $DK = DB::select('select * from ts_kunjungan where kode_kunjungan = ?', [$kodekunjungan]);
         $rm = $DK[0]->no_rm;
-
         // $KODE_HEADER = $DH[0]->kode_layanan_header;
         // $ID_HEADER = $DK[0]->counter;
         $PDO = DB::connection()->getPdo();
-        $QUERY = $PDO->prepare("CALL SP_Karcis_Pendaftaran3('$kodeheader','$rm')");
+        $QUERY = $PDO->prepare("CALL SP_CETAK_NOTA_WEB('$kodeheader','$idheader')");
         $QUERY->execute();
         $data = $QUERY->fetchAll();
         $filename = 'C:\cetakanresep\cetakanresepdp2.jrxml';

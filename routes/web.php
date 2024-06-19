@@ -67,7 +67,7 @@ Route::post('v2_add_riwayat_racik', [V2pelayananController::class, 'v2_add_riway
 
 Route::get('cetaketiket_2_all/{id}', [V2pelayananController::class, 'cetaketiket_2_all']); //formpasien_bpjs
 Route::get('cetaketiket_2/{id}', [V2pelayananController::class, 'cetakEtiket_new']); //formpasien_bpjs
-Route::get('cetaknotafarmasi_2/{id}/{kodeheader}', [V2pelayananController::class, 'cetaknota_new']); //formpasien_bpjs
+Route::get('cetaknotafarmasi_2/{id}/{kodeheader}/{idheader}', [V2pelayananController::class, 'cetaknota_new']); //formpasien_bpjs
 
 // cari_obat_reguler2
 
