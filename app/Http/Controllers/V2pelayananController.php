@@ -1373,7 +1373,7 @@ class V2pelayananController extends Controller
         $QUERY = $PDO->prepare("CALL SP_CETAK_NOTA_WEB('$kodeheader','$idheader')");
         $QUERY->execute();
         $data = $QUERY->fetchAll();
-        $filename = 'C:\cetakanresep\cetakanresepdp2.jrxml';
+        $filename = 'C:\cetakanresep\cetakannotaresep.jrxml';
         $config = ['driver' => 'array', 'data' => $data];
         $report = new PHPJasperXML();
         $report->load_xml_file($filename)
