@@ -252,12 +252,12 @@ class V2pelayananController extends Controller
                     $total = $mt_barang[0]->harga_jual * $a['jumlah'];
                     if ($data_kunjungan[0]->kode_penjamin != 'P01') {
                         $tagihan_pribadi = 0;
-                        $tagihan_penjamin = $total;
+                        $tagihan_penjamin = $total + 1700;
                         $kategori_resep = 'Resep Kredit';
                         $kode_tipe_transaki = 2;
                         $status_layanan = 2;
                     } else {
-                        $tagihan_pribadi = $total;
+                        $tagihan_pribadi = $total + 1700;
                         $tagihan_penjamin = 0;
                         $kategori_resep = 'Resep Tunai';
                         $kode_tipe_transaki = 1;
@@ -354,12 +354,12 @@ class V2pelayananController extends Controller
                     }
                     if ($data_kunjungan[0]->kode_penjamin != 'P01') {
                         $tagihan_pribadi = 0;
-                        $tagihan_penjamin = $totalracik;
+                        $tagihan_penjamin = $totalracik + $jasa_racik;
                         $kategori_resep = 'Resep Kredit';
                         $kode_tipe_transaki = 2;
                         $status_layanan = 2;
                     } else {
-                        $tagihan_pribadi = $totalracik;
+                        $tagihan_pribadi = $totalracik + $jasa_racik;
                         $tagihan_penjamin = 0;
                         $kategori_resep = 'Resep Tunai';
                         $kode_tipe_transaki = 1;
@@ -517,8 +517,9 @@ class V2pelayananController extends Controller
             foreach ($arrayindex_reguler as $ar) {
                 $idheader = $ar['idheader'];
             }
+            $toalheader2 = $totalheader + $JASA_BACA;
             ts_layanan_header_dummy::where('id', $header->id)
-                ->update(['status_layanan' => $status_layanan, 'kode_tipe_transaksi' => $kode_tipe_transaki, 'total_layanan' => $totalheader, 'tagihan_penjamin' => $tagihan_penjamin_header, 'tagihan_pribadi' => $tagihan_pribadi_header]);
+                ->update(['status_layanan' => $status_layanan, 'kode_tipe_transaksi' => $kode_tipe_transaki, 'total_layanan' => $toalheader2, 'tagihan_penjamin' => $tagihan_penjamin_header, 'tagihan_pribadi' => $tagihan_pribadi_header]);
             ti_kartu_stok::where('no_dokumen', $kode_layanan_header)->update(['sts_stok' => 1]);
         }
 
@@ -601,12 +602,12 @@ class V2pelayananController extends Controller
                     $total = $mt_barang[0]->harga_jual * $a['jumlah'];
                     if ($data_kunjungan[0]->kode_penjamin != 'P01') {
                         $tagihan_pribadi = 0;
-                        $tagihan_penjamin = $total;
+                        $tagihan_penjamin = $total + 1700;
                         $kategori_resep = 'Resep Kredit';
                         $kode_tipe_transaki = 2;
                         $status_layanan = 2;
                     } else {
-                        $tagihan_pribadi = $total;
+                        $tagihan_pribadi = $total + 1700;
                         $tagihan_penjamin = 0;
                         $kategori_resep = 'Resep Tunai';
                         $kode_tipe_transaki = 1;
@@ -703,12 +704,12 @@ class V2pelayananController extends Controller
                     }
                     if ($data_kunjungan[0]->kode_penjamin != 'P01') {
                         $tagihan_pribadi = 0;
-                        $tagihan_penjamin = $totalracik;
+                        $tagihan_penjamin = $totalracik + $jasa_racik;
                         $kategori_resep = 'Resep Kredit';
                         $kode_tipe_transaki = 2;
                         $status_layanan = 2;
                     } else {
-                        $tagihan_pribadi = $totalracik;
+                        $tagihan_pribadi = $totalracik + $jasa_racik;
                         $tagihan_penjamin = 0;
                         $kategori_resep = 'Resep Tunai';
                         $kode_tipe_transaki = 1;
@@ -866,8 +867,9 @@ class V2pelayananController extends Controller
             foreach ($arrayindex_kronis as $ar) {
                 $idheader = $ar['idheader'];
             }
+            $totalheader2 = $totalheader + $JASA_BACA;
             ts_layanan_header_dummy::where('id', $header->id)
-                ->update(['status_layanan' => $status_layanan, 'kode_tipe_transaksi' => $kode_tipe_transaki, 'total_layanan' => $totalheader, 'tagihan_penjamin' => $tagihan_penjamin_header, 'tagihan_pribadi' => $tagihan_pribadi_header]);
+                ->update(['status_layanan' => $status_layanan, 'kode_tipe_transaksi' => $kode_tipe_transaki, 'total_layanan' => $totalheader2, 'tagihan_penjamin' => $tagihan_penjamin_header, 'tagihan_pribadi' => $tagihan_pribadi_header]);
             ti_kartu_stok::where('no_dokumen', $kode_layanan_header)->update(['sts_stok' => 1]);
         }
 
