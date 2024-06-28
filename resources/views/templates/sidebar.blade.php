@@ -55,12 +55,12 @@
                         </p>
                     </a>
                 </li>
-                <li hidden class="nav-header">GUDANG FARMASI</li>
-                <li hidden class="nav-item">
+                <li class="nav-header">GUDANG FARMASI</li>
+                <li  class="nav-item">
                     <a href="{{ route('datapemakaianobat')}}" class="nav-link @if($menu == 'reporting') active @endif">
                         <i class="nav-icon fas fa-archive"></i>
                         <p>
-                           Data Pemakaian Obat
+                           Data Pemakaian
                         </p>
                     </a>
                 </li>

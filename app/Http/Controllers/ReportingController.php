@@ -5,8 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
-use Codedge\Fpdf\Fpdf\PDF;
-use Codedge\Fpdf\Fpdf\Fpdf;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class ReportingController extends V2pelayananController
 {
@@ -14,47 +13,30 @@ class ReportingController extends V2pelayananController
     {
         $menu = 'reporting';
         $now = $this->get_date();
-        $mt_unit = DB::select('select * from mt_unit');
+        $mt_unit = DB::select('select * from mt_unit where kode_unit > 4000 AND kode_unit <= 4013');
         return view('reporting.index', compact([
             'menu', 'now', 'mt_unit'
         ]));
     }
-    public function ambil_data_pemakaian()
+    public function ambil_data_pemakaian(Request $request)
     {
-
-        $kunjungan = db::select("SELECT kode_kunjungan,no_rm,fc_nama_px(no_rm) as nama_pasien,kode_unit FROM ts_kunjungan
-        WHERE DATE(tgl_masuk) BETWEEN '2024-06-10' AND '2024-06-10' AND kode_unit = '1014' AND status_kunjungan != 8");
-
-        $order_header = db::select("SELECT b.kode_kunjungan,b.dok_kirim,b.diagnosa,c.kode_barang,c.aturan_pakai,c.jumlah_layanan FROM ts_kunjungan a
-        INNER JOIN ts_layanan_header_order b ON a.kode_kunjungan = b.kode_kunjungan
-        INNER JOIN ts_layanan_detail_order c on b.id = c.row_id_header
-        WHERE DATE(a.tgl_masuk) BETWEEN '2024-06-10' AND '2024-06-10' AND a.kode_unit = '1014' AND a.status_kunjungan != 8");
-
-        // dd($kunjungan);
-        // $pdf = new PDF('P', 'in', array('1.97', '2.36'));
-        $pdf = new Fpdf('P', 'mm', 'A4');
-        $i = $pdf->GetY();
-        // $pdf->AliasNbPages();
-        $pdf->AddPage();
-        $pdf->SetTitle('Cetak Etiket');
-        $pdf->SetFont('Arial', 'B', 8);
-        $y = 10;
-        foreach ($kunjungan as $d) {
-            foreach ($order_header as $oh) {
-                if ($oh->kode_kunjungan == $d->kode_kunjungan) {
-                    $pdf->Image('public/img/logo_rs.png', 5, $y, 15, 10);
-                    $pdf->SetXY(2, $y);
-                    $pdf->Cell(10, 0.5, 'RINCIAN BIAYA FARMASI', 0, 1);
-                    $pdf->SetXY(2, $y);
-                    $pdf->Cell(10, 0.5, 'RSUD WALED KAB.CIREBON', 0, 1);
-                    // $pdf->SetXY(8, 1);
-                    // $pdf->SetXY(4, $y);
-                    // $pdf->Cell(100, 10, $d->no_rm . ' | ' . $d->nama_pasien . ' | Diagnosa :' . $oh->diagnosa, 10, 1);
-                    $y = $y + 10;
-                }
-            }
-        }
-        $pdf->Output();
-        exit;
+        $tglawal = $request->awal;
+        $tglakhir = $request->akhir;
+        $unit = $request->unit;
+        // $data_kunjungan = db::SELECT("select date(tgl_masuk) as tgl_masuk,kode_kunjungan,no_rm,fc_nama_px(no_rm) as nama_pasien,fc_nama_unit1(kode_unit) as nama_unit,no_sep,fc_nama_paramedis1(kode_paramedis) as nama_Dokter from ts_kunjungan where date(tgl_masuk) between '$tglawal' and '$tglakhir' and kode_unit < 2000 and kode_unit != 1002 and kode_unit != 1023 order by kode_kunjungan desc");
+        $data = db::select("CALL sp_farmasi_laporan_order_layanan_resep('$tglawal','$tglakhir','','','')");
+        return view('reporting.datapemakaian', compact([
+            'tglawal',
+            'tglakhir',
+            'unit', 'data_kunjungan', 'data'
+        ]));
+    }
+    public function Cetak_Data_pemakaian($tglawal, $tglakhir, $unit)
+    {
+        $data_kunjungan = db::SELECT("select date(tgl_masuk) as tgl_masuk,kode_kunjungan,no_rm,fc_nama_px(no_rm) as nama_pasien,fc_nama_unit1(kode_unit) as nama_unit,no_sep,fc_nama_paramedis1(kode_paramedis) as nama_Dokter from ts_kunjungan where date(tgl_masuk) between '$tglawal' and '$tglakhir' and kode_unit < 2000 and kode_unit != 1002 and kode_unit != 1023 order by kode_kunjungan desc");
+        $data = db::select("CALL sp_farmasi_laporan_order_layanan_resep('$tglawal','$tglakhir','','','')");
+        return view('reporting.cetakandatapemakaian', compact([
+            'data_kunjungan'
+        ]));
     }
 }

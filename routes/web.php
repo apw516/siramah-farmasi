@@ -76,4 +76,5 @@ Route::get('/antrian', [antrianController::class, 'Index'])->name('index');
 Route::post('/ambilantrian', [antrianController::class, 'ambilantrian'])->name('ambilantrian');
 
 Route::get('datapemakaianobat', [ReportingController::class, 'index'])->name('datapemakaianobat');
-Route::get('ambil_data_pemakaian', [ReportingController::class, 'ambil_data_pemakaian'])->name('ambil_data_pemakaian');
+Route::post('ambil_data_pemakaian', [ReportingController::class, 'ambil_data_pemakaian'])->name('ambil_data_pemakaian');
+Route::get('pdflaporanpemakaian/{tglawal}/{tglakhir}/{unit}', [ReportingController::class, 'Cetak_Data_pemakaian'])->name('Cetak_Data_pemakaian');

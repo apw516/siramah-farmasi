@@ -212,13 +212,14 @@ class V2pelayananController extends Controller
             }
 
             $unitlog = auth()->user()->unit;
-            $r = DB::connection('mysql2')->select("CALL GET_NOMOR_LAYANAN_HEADER($unitlog)");
-            $kode_layanan_header = $r[0]->no_trx_layanan;
-            if ($kode_layanan_header == '') {
-                $year = date('y');
-                $kode_layanan_header = $unit[0]->prefix_unit . $year . date('m') . date('d') . '000001';
-                DB::connection('mysql2')->select('insert into mt_nomor_trx (tgl,no_trx_layanan,unit) values (?,?,?)', [date('Y-m-d h:i:s'), $kode_layanan_header, $kodeunit]);
-            }
+            // $r = DB::connection('mysql2')->select("CALL GET_NOMOR_LAYANAN_HEADER($unitlog)");
+            // $kode_layanan_header = $r[0]->no_trx_layanan;
+            // if ($kode_layanan_header == '') {
+            //     $year = date('y');
+            //     $kode_layanan_header = $unit[0]->prefix_unit . $year . date('m') . date('d') . '000001';
+            //     DB::connection('mysql2')->select('insert into mt_nomor_trx (tgl,no_trx_layanan,unit) values (?,?,?)', [date('Y-m-d h:i:s'), $kode_layanan_header, $kodeunit]);
+            // }
+            $kode_layanan_header = $this->createLayananHeader();
             try {
                 $ts_layanan_header = [
                     'kode_layanan_header' => $kode_layanan_header,
@@ -463,7 +464,7 @@ class V2pelayananController extends Controller
                             'harga_beli' => $mt_barang[0]->hna,
                             'act' => '1',
                             'act_ed' => '1',
-                            'inputby' => auth()->user()->id,
+                            'inputby' => auth()->user()->id_simrs,
                             'keterangan01' => $data_kunjungan[0]->no_rm . '|' . $data_kunjungan[0]->nama_pasien . '|' . $data_kunjungan[0]->alamat_pasien,
                             'sts_stok' => '2'
                         ];
@@ -498,7 +499,7 @@ class V2pelayananController extends Controller
                         'harga_beli' => $mt_barang[0]->hna,
                         'act' => '1',
                         'act_ed' => '1',
-                        'inputby' => auth()->user()->id,
+                        'inputby' => auth()->user()->id_simrs,
                         'keterangan' => $data_kunjungan[0]->no_rm . '|' . $data_kunjungan[0]->nama_pasien . '|' . $data_kunjungan[0]->alamat_pasien,
                         'sts_stok' => '2'
                     ];
@@ -560,15 +561,15 @@ class V2pelayananController extends Controller
                     }
                 }
             }
-
             $unitlog = auth()->user()->unit;
-            $r = DB::connection('mysql2')->select("CALL GET_NOMOR_LAYANAN_HEADER($unitlog)");
-            $kode_layanan_header = $r[0]->no_trx_layanan;
-            if ($kode_layanan_header == '') {
-                $year = date('y');
-                $kode_layanan_header = $unit[0]->prefix_unit . $year . date('m') . date('d') . '000001';
-                DB::connection('mysql2')->select('insert into mt_nomor_trx (tgl,no_trx_layanan,unit) values (?,?,?)', [date('Y-m-d h:i:s'), $kode_layanan_header, $kodeunit]);
-            }
+            // $r = DB::connection('mysql2')->select("CALL GET_NOMOR_LAYANAN_HEADER($unitlog)");
+            // $kode_layanan_header = $r[0]->no_trx_layanan;
+            // if ($kode_layanan_header == '') {
+            //     $year = date('y');
+            //     $kode_layanan_header = $unit[0]->prefix_unit . $year . date('m') . date('d') . '000001';
+            //     DB::connection('mysql2')->select('insert into mt_nomor_trx (tgl,no_trx_layanan,unit) values (?,?,?)', [date('Y-m-d h:i:s'), $kode_layanan_header, $kodeunit]);
+            // }
+            $kode_layanan_header = $this->createLayananHeader();
             try {
                 $ts_layanan_header = [
                     'kode_layanan_header' => $kode_layanan_header,
@@ -779,8 +780,6 @@ class V2pelayananController extends Controller
                 'row_id_header' => $header->id,
             ];
             $detail3 = ts_layanan_detail_dummy::create($ts_layanan_detail3);
-
-
             //membedakan racikan dan non racikan;
             $get_detail_obat = DB::connection('mysql2')->select('select * from ts_layanan_detail where row_id_header = ? and kode_tarif_detail = ?', [$header->id, '']);
             foreach ($get_detail_obat as $do) {
@@ -813,7 +812,7 @@ class V2pelayananController extends Controller
                             'harga_beli' => $mt_barang[0]->hna,
                             'act' => '1',
                             'act_ed' => '1',
-                            'inputby' => auth()->user()->id,
+                            'inputby' => auth()->user()->id_simrs,
                             'keterangan' => $data_kunjungan[0]->no_rm . '|' . $data_kunjungan[0]->nama_pasien . '|' . $data_kunjungan[0]->alamat_pasien,
                             'sts_stok' => '2'
                         ];
@@ -848,7 +847,7 @@ class V2pelayananController extends Controller
                         'harga_beli' => $mt_barang[0]->hna,
                         'act' => '1',
                         'act_ed' => '1',
-                        'inputby' => auth()->user()->id,
+                        'inputby' => auth()->user()->id_simrs,
                         'keterangan' => $data_kunjungan[0]->no_rm . '|' . $data_kunjungan[0]->nama_pasien . '|' . $data_kunjungan[0]->alamat_pasien,
                         'sts_stok' => '2'
                     ];
@@ -881,6 +880,42 @@ class V2pelayananController extends Controller
         ];
         echo json_encode($data);
         die;
+    }
+    public function createLayananHeader()
+    {
+        $unitlog = auth()->user()->unit;
+        $mt_unit = db::connection('mysql2')->select('select * from mt_unit where kode_unit = ?',[$unitlog]);
+        $pref = $mt_unit[0]->prefix_unit;
+        $q = DB::connection('mysql')->select("SELECT id,RIGHT(kode_layanan_header,6) as kd_max,tgl_entry,kode_unit
+        FROM ts_layanan_header
+        WHERE id = (SELECT MAX(id) FROM ts_layanan_header WHERE kode_unit = '$unitlog' AND DATE(tgl_entry) = DATE(NOW()))
+        AND DATE(tgl_entry) = DATE(NOW()) LIMIT 1");
+        $kd = "";
+        if (count($q) > 0) {
+            foreach ($q as $k) {
+                $tmp = ((int) $k->kd_max) + 1;
+                $kd = sprintf("%06s", $tmp);
+            }
+        } else {
+            $kd = "000001";
+        }
+        date_default_timezone_set('Asia/Jakarta');
+        return $pref . date('ymd') . $kd;
+        // $q = DB::connection('mysql2')->select('SELECT id,id_layanan_detail,RIGHT(id_layanan_detail,6) AS kd_max  FROM ts_layanan_detail
+        // WHERE DATE(tgl_layanan_detail) = CURDATE()
+        // ORDER BY id DESC
+        // LIMIT 1');
+        // $kd = "";
+        // if (count($q) > 0) {
+        //     foreach ($q as $k) {
+        //         $tmp = ((int) $k->kd_max) + 1;
+        //         $kd = sprintf("%06s", $tmp);
+        //     }
+        // } else {
+        //     $kd = "000001";
+        // }
+        // date_default_timezone_set('Asia/Jakarta');
+        // return 'DET' . date('ymd') . $kd;
     }
     public function createLayanandetail()
     {
