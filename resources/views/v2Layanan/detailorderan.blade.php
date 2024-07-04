@@ -122,10 +122,10 @@
                                             <option value='81' @if ($d->tipe_anestesi == 1) selected @endif>
                                                 Kronis
                                             </option>
-                                            <option value='82' @if ($d->tipe_anestesi == 1) selected @endif>
+                                            <option value='82' @if ($d->tipe_anestesi == 2) selected @endif>
                                                 Kemoterapi
                                             </option>
-                                            <option value='83' @if ($d->tipe_anestesi == 1) selected @endif>
+                                            <option value='83' @if ($d->tipe_anestesi == 3) selected @endif>
                                                 Hibah
                                             </option>
                                         </select>
