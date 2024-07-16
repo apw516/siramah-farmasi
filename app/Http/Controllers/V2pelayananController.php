@@ -427,11 +427,14 @@ class V2pelayananController extends Controller
                 'tagihan_pribadi' => $tagian_pribadi_head,
                 'tagihan_penjamin' => $tagian_penjamin_head,
                 'tgl_layanan_detail_2' => $now,
+                'kode_barang' => '',
+                'aturan_pakai' => '',
+                'kategori_resep' => '',
+                'satuan_barang' => '',
+                'tipe_anestesi' => '',
                 'row_id_header' => $header->id,
             ];
             $detail3 = ts_layanan_detail_dummy::create($ts_layanan_detail3);
-
-
             //membedakan racikan dan non racikan;
             $get_detail_obat = DB::connection('mysql2')->select('select * from ts_layanan_detail where row_id_header = ? and kode_tarif_detail = ?', [$header->id, '']);
             foreach ($get_detail_obat as $do) {
@@ -777,6 +780,11 @@ class V2pelayananController extends Controller
                 'tagihan_pribadi' => $tagian_pribadi_head,
                 'tagihan_penjamin' => $tagian_penjamin_head,
                 'tgl_layanan_detail_2' => $now,
+                'kode_barang' => '',
+                'aturan_pakai' => '',
+                'kategori_resep' => '',
+                'satuan_barang' => '',
+                'tipe_anestesi' => '',
                 'row_id_header' => $header->id,
             ];
             $detail3 = ts_layanan_detail_dummy::create($ts_layanan_detail3);
