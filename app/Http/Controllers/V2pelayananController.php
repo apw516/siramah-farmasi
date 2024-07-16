@@ -962,6 +962,7 @@ class V2pelayananController extends Controller
     {
         $unit = auth()->user()->unit;
         $get_header = DB::connection('mysql2')->select("select *,fc_nama_unit1(kode_unit) as nama_unit from ts_layanan_header where kode_kunjungan = ? and kode_unit  IN ('4002','4003','4004','4005','4006','4008','4009','4010','4011','4012','4013')", [$request->kodekunjungan]);
+
         $list = DB::connection('mysql2')->select("SELECT a.kode_layanan_header,a.`kode_kunjungan`,a.id AS id_header
         ,b.id AS id_detail
         ,b.`kode_barang`
@@ -976,7 +977,7 @@ class V2pelayananController extends Controller
          FROM ts_layanan_header a
         INNER JOIN ts_layanan_detail b ON a.id = b.`row_id_header`
         LEFT OUTER JOIN mt_racikan c on b.kode_barang = c.kode_racik
-        WHERE A.`status_layanan` = '2' AND a.kode_kunjungan = '$request->kodekunjungan' AND b.`status_layanan_detail` = 'OPN' AND kode_unit IN ('4002','4003','4004','4005','4006','4008','4009','4010','4011','4012','4013')");
+        WHERE A.`status_layanan`IN ('1','2') AND a.kode_kunjungan = '$request->kodekunjungan' AND b.`status_layanan_detail` = 'OPN' AND kode_unit IN ('4002','4003','4004','4005','4006','4008','4009','4010','4011','4012','4013')");
         $kodekunjungan = $request->kodekunjungan;
         // dd($get_header);
         return view('v2Layanan.tabel_riwayat_obat_hari_ini', compact([
