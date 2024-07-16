@@ -431,7 +431,7 @@ class V2pelayananController extends Controller
                 'aturan_pakai' => '',
                 'kategori_resep' => '',
                 'satuan_barang' => '',
-                'tipe_anestesi' => '',
+                'tipe_anestesi' => '0',
                 'row_id_header' => $header->id,
             ];
             $detail3 = ts_layanan_detail_dummy::create($ts_layanan_detail3);
@@ -784,7 +784,7 @@ class V2pelayananController extends Controller
                 'aturan_pakai' => '',
                 'kategori_resep' => '',
                 'satuan_barang' => '',
-                'tipe_anestesi' => '',
+                'tipe_anestesi' => '0',
                 'row_id_header' => $header->id,
             ];
             $detail3 = ts_layanan_detail_dummy::create($ts_layanan_detail3);
